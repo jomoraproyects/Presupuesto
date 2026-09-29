@@ -1,12 +1,12 @@
-# Presupuesto Serviciudad E.S.P. — fase 1
+# Presupuesto Serviciudad E.S.P. — fases 1 y 2
 
-Backend para administrar catálogos y preparar la formulación del presupuesto anual. Esta fase incluye autenticación JWT, roles, áreas, servicios, vigencias y rubros jerárquicos. Las necesidades, distribuciones por servicio, historial, nómina y frontend pertenecen a fases posteriores.
+Backend para formular y revisar el presupuesto anual. Incluye autenticación JWT, usuarios y roles, catálogos, necesidades por área, distribución entre servicios, historial y consolidados. Nómina, frontend, exportaciones e integraciones pertenecen a fases posteriores.
 
 ## Tecnologías y arquitectura
 
 Java 21, Spring Boot 3.5, Maven, Spring Web, Security, Data JPA, Bean Validation, Flyway, MySQL, Lombok y JJWT. El código se organiza en `controller` (HTTP y validación), `dto` (contratos API), `service` (reglas y transacciones), `repository` (persistencia), `entity`, `security`, `config` y `exception`. Los controladores no exponen entidades JPA.
 
-El esquema lo crea Flyway (`src/main/resources/db/migration`). Hibernate usa `ddl-auto: validate`: comprueba el mapeo, pero no modifica la base de datos. Se usan IDs `Long`, `BigDecimal` para dinero y fechas Java Time.
+El esquema lo crea Flyway (`src/main/resources/db/migration`). `V3__necesidades.sql` agrega necesidades, distribuciones e historial. Hibernate usa `ddl-auto: validate`: comprueba el mapeo, pero no modifica la base de datos. Se usan IDs `Long`, `BigDecimal` para dinero y fechas Java Time.
 
 ## Requisitos
 
@@ -63,11 +63,11 @@ Para usar otro host o base, definir también `DB_HOST`, `DB_PORT` y `DB_NAME`.
 .\mvnw.cmd package
 ```
 
-La prueba de integración usa H2 en modo MySQL para validar la aplicación, las migraciones, los mapeos JPA, el login, el acceso por rol y el árbol. El despliegue real usa MySQL; se recomienda ejecutar el arranque contra la instancia MySQL del entorno antes de ponerlo en servicio.
+Las pruebas de integración usan H2 en modo MySQL para validar las migraciones, JPA, autenticación, permisos, flujo de necesidades y consolidados. El despliegue real usa MySQL; se recomienda ejecutar el arranque contra la instancia MySQL del entorno antes de ponerlo en servicio.
 
 ## API inicial
 
-Todas las rutas excepto `POST /api/auth/login` requieren `Authorization: Bearer <token>`. Los cuatro roles pueden consultar catálogos; solo `SUPER_ADMIN` puede modificarlos en esta fase. `PRESUPUESTO` tendrá sus operaciones de revisión en la fase de necesidades. La administración de usuarios mediante API no está incluida todavía.
+Todas las rutas excepto `POST /api/auth/login` requieren `Authorization: Bearer <token>`. Los cuatro roles pueden consultar catálogos; solo `SUPER_ADMIN` puede modificarlos. `SUPER_ADMIN` crea los demás usuarios en `POST /api/usuarios`, asignándoles un rol y, para `RESPONSABLE_AREA`, un `areaId` activo. La contraseña no aparece en la respuesta y se almacena con BCrypt.
 
 | Recurso | Lectura | Escritura |
 | --- | --- | --- |
@@ -100,3 +100,74 @@ El ID devuelto se usa en `rubroPadreId` del hijo:
 ```
 
 Los errores de la API usan `timestamp`, `status`, `error`, `message` y `path`. Las validaciones reciben 400, los recursos inexistentes 404, los conflictos de negocio 409, la falta de autenticación 401 y la falta de permisos 403.
+
+## Usuarios
+
+Solo `SUPER_ADMIN` puede usar `GET /api/usuarios`, `GET /api/usuarios/{id}`, `POST /api/usuarios`, `PUT /api/usuarios/{id}` y `PATCH /api/usuarios/{id}/estado`. El `PUT` cambia nombre, rol y área; no modifica la contraseña. El `PATCH` activa o desactiva al usuario. Un usuario desactivado no puede autenticarse ni usar un token existente.
+
+Ejemplo de creación de responsable:
+
+```json
+{"username":"responsable.operativa","password":"<contraseña-segura-de-12-o-más-caracteres>","nombre":"Responsable Operativa","rol":"RESPONSABLE_AREA","areaId":1}
+```
+
+Crear usuarios `PRESUPUESTO` y `CONSULTA` de la misma forma, omitiendo `areaId`.
+
+## Necesidades y revisión
+
+Una necesidad pertenece a una vigencia, un área y un rubro activo que permite movimiento. `RESPONSABLE_AREA` crea y edita únicamente para su área; `SUPER_ADMIN` puede hacerlo para cualquier área. La vigencia debe estar activa y `ABIERTA`. El total solicitado se calcula como `cantidadSolicitada × valorUnitarioSolicitado`, redondeado a dos decimales.
+
+```http
+POST /api/necesidades
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+```json
+{
+  "vigenciaId": 1,
+  "areaId": 1,
+  "rubroPresupuestalId": 2,
+  "descripcion": "Compra de computadores",
+  "justificacion": "Renovación tecnológica",
+  "unidadMedida": "unidad",
+  "cantidadSolicitada": 100,
+  "valorUnitarioSolicitado": 1000000,
+  "distribuciones": [
+    {"servicioId": 1, "porcentaje": 33},
+    {"servicioId": 2, "porcentaje": 33},
+    {"servicioId": 3, "porcentaje": 34}
+  ]
+}
+```
+
+Los porcentajes deben sumar exactamente `100.00`; un único servicio se representa con una distribución del `100`. No se aceptan servicios duplicados o inactivos. Un borrador puede guardarse sin distribución, pero no enviarse. Los centavos se asignan según los restos decimales para que la suma distribuida coincida exactamente con el total.
+
+| Operación | Ruta | Rol |
+| --- | --- | --- |
+| Listar con filtros y paginación | `GET /api/necesidades` | Todos; el responsable solo ve su área |
+| Consultar y ver historial | `GET /api/necesidades/{id}`, `GET /api/necesidades/{id}/historial` | Todos, con restricción de área |
+| Crear o corregir | `POST /api/necesidades`, `PUT /api/necesidades/{id}` | Responsable de área, administrador |
+| Cancelar borrador lógico | `DELETE /api/necesidades/{id}` | Responsable de área, administrador |
+| Enviar | `POST /api/necesidades/{id}/enviar` | Responsable de área, administrador |
+| Iniciar revisión | `POST /api/necesidades/{id}/iniciar-revision` | Presupuesto, administrador |
+| Ajustar | `PATCH /api/necesidades/{id}/ajuste` | Presupuesto, administrador |
+| Aprobar | `POST /api/necesidades/{id}/aprobar` | Presupuesto, administrador |
+| Rechazar o devolver | `POST /api/necesidades/{id}/rechazar`, `POST /api/necesidades/{id}/devolver` | Presupuesto, administrador |
+
+`GET /api/necesidades` acepta `vigenciaId`, `areaId`, `servicioId`, `rubroId`, `estado`, `texto`, `page` y `size` (máximo 100 registros por página). El `areaId` enviado por un responsable se ignora y se aplica siempre su área autenticada.
+
+La edición normal solo se permite en `BORRADOR` y `DEVUELTA`. Al enviar, la necesidad pasa a `ENVIADA`; Presupuesto la pasa a `EN_REVISION`. El ajuste acepta `cantidadAprobada`, `valorUnitarioAprobado` y `observacionPresupuesto`, recalcula el aprobado y mantiene intactos los valores solicitados. Aprobar sin ajustes copia lo solicitado; con diferencias resulta `APROBADA_CON_AJUSTES`; un aprobado de cero resulta `RECHAZADA`. Rechazar y devolver requieren `{"observacionPresupuesto":"motivo"}`. La devolución borra el aprobado provisional y permite corregir y reenviar.
+
+`cantidadSolicitadaOriginal`, `valorUnitarioSolicitadoOriginal` y `valorTotalSolicitadoOriginal` se fijan en el primer envío y no cambian si el área corrige una necesidad devuelta. Los campos `*Solicitada` sin sufijo `Original` reflejan la solicitud vigente. El historial registra cada transición y guarda instantáneas anterior y nueva; no ofrece endpoints de modificación o borrado.
+
+## Consolidados
+
+Disponibles para `PRESUPUESTO`, `SUPER_ADMIN` y `CONSULTA`:
+
+- `GET /api/presupuesto/vigencias/{vigenciaId}/resumen`
+- `GET /api/presupuesto/vigencias/{vigenciaId}/por-area`
+- `GET /api/presupuesto/vigencias/{vigenciaId}/por-servicio`
+- `GET /api/presupuesto/vigencias/{vigenciaId}/por-rubro`
+
+Se incluyen necesidades `ENVIADA`, `EN_REVISION`, `APROBADA`, `APROBADA_CON_AJUSTES` y `RECHAZADA`. Los borradores, las devueltas y las canceladas se excluyen. El aprobado aún no definido cuenta como cero. El resumen usa `diferenciaContraTecho = totalAprobado - presupuestoDisponible`: positivo significa exceso sobre el techo. Los totales por servicio se calculan con las distribuciones y los de rubro acumulan los importes de todos sus descendientes sin guardar totales redundantes.
