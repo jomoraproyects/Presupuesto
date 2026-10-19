@@ -2,6 +2,8 @@
 
 Monolito Spring Boot con frontend React para formular y aprobar el presupuesto anual. Se conservan la autenticación, áreas, vigencias, conceptos, ítems, historial y consolidados existentes.
 
+Para instalarlo en la VM Ubuntu de la empresa con una base MySQL nueva, consulte [la guía de despliegue](deploy/INSTALACION_UBUNTU.md).
+
 ## Flujo actual
 
 1. SUPER_ADMIN entra a **Crear presupuesto**, crea la vigencia en borrador, revisa los conceptos y puede agregar, editar, activar, desactivar u ordenar conceptos. Cada año recibe copias propias de los conceptos; nombres repetidos conservan IDs distintos.

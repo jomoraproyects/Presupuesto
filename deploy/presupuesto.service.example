@@ -1,0 +1,18 @@
+[Unit]
+Description=Presupuesto Serviciudad
+After=network-online.target mysql.service
+Wants=network-online.target
+
+[Service]
+Type=exec
+User=USUARIO_UBUNTU
+Group=USUARIO_UBUNTU
+WorkingDirectory=/home/USUARIO_UBUNTU/Escritorio/Presupuesto
+EnvironmentFile=/etc/presupuesto/presupuesto.env
+ExecStart=/usr/bin/java -jar /home/USUARIO_UBUNTU/Escritorio/Presupuesto/target/presupuesto-0.1.0-SNAPSHOT.jar --server.address=127.0.0.1
+Restart=on-failure
+RestartSec=5
+SuccessExitStatus=143
+
+[Install]
+WantedBy=multi-user.target
