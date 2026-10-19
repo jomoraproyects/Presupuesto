@@ -4,6 +4,10 @@ import com.serviciudad.presupuesto.dto.*;
 import com.serviciudad.presupuesto.entity.Vigencia;
 import com.serviciudad.presupuesto.exception.*;
 import com.serviciudad.presupuesto.repository.VigenciaRepository;
+import com.serviciudad.presupuesto.repository.AreaVigenciaRepository;
+import com.serviciudad.presupuesto.security.UsuarioActual;
+import com.serviciudad.presupuesto.enums.NombreRol;
+import org.springframework.security.access.AccessDeniedException;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,11 +16,26 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class VigenciaService {
     private final VigenciaRepository repository;
-    public VigenciaService(VigenciaRepository repository) { this.repository = repository; }
+    private final AreaVigenciaRepository participantes;
+    private final UsuarioActual actual;
+    public VigenciaService(VigenciaRepository repository, AreaVigenciaRepository participantes, UsuarioActual actual) {
+        this.repository = repository; this.participantes = participantes; this.actual = actual;
+    }
     @Transactional(readOnly = true)
-    public List<VigenciaResponse> list() { return repository.findAll().stream().map(this::toResponse).toList(); }
+    public List<VigenciaResponse> list() {
+        var user = actual.get();
+        return repository.findAll().stream()
+            .filter(v -> !actual.is(user, NombreRol.RESPONSABLE_AREA) || participantes.existsByVigenciaIdAndAreaIdAndActivaTrue(v.getId(), user.getArea().getId()))
+            .map(this::toResponse).toList();
+    }
     @Transactional(readOnly = true)
-    public VigenciaResponse get(Long id) { return toResponse(find(id)); }
+    public VigenciaResponse get(Long id) {
+        var user = actual.get();
+        if (actual.is(user, NombreRol.RESPONSABLE_AREA)
+            && !participantes.existsByVigenciaIdAndAreaIdAndActivaTrue(id, user.getArea().getId()))
+            throw new AccessDeniedException("La vigencia no fue enviada a esta dependencia");
+        return toResponse(find(id));
+    }
     public VigenciaResponse create(VigenciaRequest request) {
         Vigencia vigencia = new Vigencia(); apply(vigencia, request);
         return toResponse(repository.saveAndFlush(vigencia));

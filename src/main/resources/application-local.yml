@@ -1,0 +1,17 @@
+spring:
+  datasource:
+    url: jdbc:h2:file:./.local/data/presupuesto;MODE=MySQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ${LOCAL_DB_PASSWORD}
+server:
+  address: 127.0.0.1
+app:
+  cors:
+    allowed-origins: ${LOCAL_FRONTEND_ORIGINS:http://localhost:5173}
+  jwt:
+    secret: ${LOCAL_JWT_SECRET}
+  admin:
+    username: ${LOCAL_ADMIN_USERNAME}
+    password: ${LOCAL_ADMIN_PASSWORD}
+    sync-password-on-start: true

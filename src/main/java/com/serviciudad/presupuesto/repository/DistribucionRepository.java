@@ -16,6 +16,15 @@ public interface DistribucionRepository extends JpaRepository<DistribucionNecesi
         "and d.necesidad.activa = true and d.necesidad.estado in :estados group by d.servicio.id, d.servicio.nombre")
     List<ServicioTotal> byServicio(@Param("vigenciaId") Long vigenciaId, @Param("estados") Collection<EstadoNecesidadPresupuestal> estados);
 
+    @Query("select d.necesidad.rubroPresupuestal.id as rubroId, d.necesidad.rubroPresupuestal.nombre as rubro, " +
+        "d.servicio.id as servicioId, d.servicio.nombre as servicio, sum(d.valorSolicitadoDistribuido) as solicitado, " +
+        "sum(d.valorAprobadoDistribuido) as aprobado from DistribucionNecesidad d " +
+        "where d.necesidad.vigencia.id = :vigenciaId and d.necesidad.activa = true and d.necesidad.estado in :estados " +
+        "group by d.necesidad.rubroPresupuestal.id, d.necesidad.rubroPresupuestal.nombre, d.servicio.id, d.servicio.nombre")
+    List<RubroServicioTotal> byRubroServicio(@Param("vigenciaId") Long vigenciaId, @Param("estados") Collection<EstadoNecesidadPresupuestal> estados);
+
+    interface RubroServicioTotal extends ServicioTotal { Long getRubroId(); String getRubro(); }
+
     interface ServicioTotal {
         Long getServicioId(); String getServicio(); BigDecimal getSolicitado(); BigDecimal getAprobado();
     }

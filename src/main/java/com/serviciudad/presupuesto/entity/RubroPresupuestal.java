@@ -23,6 +23,8 @@ public class RubroPresupuestal extends Auditable {
     private int nivel;
     @Column(name = "permite_movimiento", nullable = false)
     private boolean permiteMovimiento;
+    @Column(name = "categoria_formulacion", nullable = false)
+    private boolean categoriaFormulacion = true;
     @Column(nullable = false)
     private boolean activo = true;
     @ManyToOne(fetch = FetchType.LAZY)

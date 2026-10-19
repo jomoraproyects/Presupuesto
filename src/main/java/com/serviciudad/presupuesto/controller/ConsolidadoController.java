@@ -7,7 +7,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@PreAuthorize("hasAnyRole('PRESUPUESTO','SUPER_ADMIN','CONSULTA')")
+@PreAuthorize("hasAnyRole('SUPER_ADMIN','CONSULTA')")
 @RequestMapping("/api/presupuesto/vigencias/{vigenciaId}")
 public class ConsolidadoController {
     private final ConsolidadoService service;
@@ -23,5 +23,8 @@ public class ConsolidadoController {
     }
     @GetMapping("/por-rubro") public List<ConsolidadoRubroResponse> byRubro(@PathVariable Long vigenciaId) {
         return service.byRubro(vigenciaId);
+    }
+    @GetMapping("/general") public List<PresupuestoGeneralConceptoResponse> general(@PathVariable Long vigenciaId) {
+        return service.general(vigenciaId);
     }
 }

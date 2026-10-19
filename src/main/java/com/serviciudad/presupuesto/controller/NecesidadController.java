@@ -32,43 +32,48 @@ public class NecesidadController {
     @GetMapping("/{id}/historial")
     public List<HistorialNecesidadResponse> history(@PathVariable Long id) { return service.history(id); }
 
-    @PostMapping @PreAuthorize("hasAnyRole('RESPONSABLE_AREA','SUPER_ADMIN')")
+    @PostMapping @PreAuthorize("hasRole('RESPONSABLE_AREA')")
     public ResponseEntity<NecesidadResponse> create(@Valid @RequestBody NecesidadRequest request) {
         NecesidadResponse response = service.create(request);
         return ResponseEntity.created(URI.create("/api/necesidades/" + response.id())).body(response);
     }
 
-    @PutMapping("/{id}") @PreAuthorize("hasAnyRole('RESPONSABLE_AREA','SUPER_ADMIN')")
+    @PutMapping("/{id}") @PreAuthorize("hasRole('RESPONSABLE_AREA')")
     public NecesidadResponse update(@PathVariable Long id, @Valid @RequestBody NecesidadRequest request) {
         return service.update(id, request);
     }
 
-    @DeleteMapping("/{id}") @PreAuthorize("hasAnyRole('RESPONSABLE_AREA','SUPER_ADMIN')")
+    @DeleteMapping("/{id}") @PreAuthorize("hasRole('RESPONSABLE_AREA')")
     public ResponseEntity<Void> cancel(@PathVariable Long id) {
         service.cancelDraft(id);
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/{id}/enviar") @PreAuthorize("hasAnyRole('RESPONSABLE_AREA','SUPER_ADMIN')")
+    @PostMapping("/{id}/enviar") @PreAuthorize("hasRole('RESPONSABLE_AREA')")
     public NecesidadResponse send(@PathVariable Long id) { return service.send(id); }
 
-    @PostMapping("/{id}/iniciar-revision") @PreAuthorize("hasAnyRole('PRESUPUESTO','SUPER_ADMIN')")
+    @PostMapping("/{id}/iniciar-revision") @PreAuthorize("hasRole('SUPER_ADMIN')")
     public NecesidadResponse startReview(@PathVariable Long id) { return service.startReview(id); }
 
-    @PatchMapping("/{id}/ajuste") @PreAuthorize("hasAnyRole('PRESUPUESTO','SUPER_ADMIN')")
+    @PatchMapping("/{id}/ajuste") @PreAuthorize("hasRole('SUPER_ADMIN')")
     public NecesidadResponse adjust(@PathVariable Long id, @Valid @RequestBody AjusteNecesidadRequest request) {
         return service.adjust(id, request);
     }
 
-    @PostMapping("/{id}/aprobar") @PreAuthorize("hasAnyRole('PRESUPUESTO','SUPER_ADMIN')")
+    @PutMapping("/{id}/aprobado") @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public NecesidadResponse guardarAprobado(@PathVariable Long id, @Valid @RequestBody AjusteNecesidadRequest request) {
+        return service.guardarAprobado(id, request);
+    }
+
+    @PostMapping("/{id}/aprobar") @PreAuthorize("hasRole('SUPER_ADMIN')")
     public NecesidadResponse approve(@PathVariable Long id) { return service.approve(id); }
 
-    @PostMapping("/{id}/rechazar") @PreAuthorize("hasAnyRole('PRESUPUESTO','SUPER_ADMIN')")
+    @PostMapping("/{id}/rechazar") @PreAuthorize("hasRole('SUPER_ADMIN')")
     public NecesidadResponse reject(@PathVariable Long id, @Valid @RequestBody ObservacionRequest request) {
         return service.reject(id, request);
     }
 
-    @PostMapping("/{id}/devolver") @PreAuthorize("hasAnyRole('PRESUPUESTO','SUPER_ADMIN')")
+    @PostMapping("/{id}/devolver") @PreAuthorize("hasRole('SUPER_ADMIN')")
     public NecesidadResponse returnToArea(@PathVariable Long id, @Valid @RequestBody ObservacionRequest request) {
         return service.returnToArea(id, request);
     }

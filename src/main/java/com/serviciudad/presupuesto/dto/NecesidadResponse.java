@@ -12,4 +12,5 @@ public record NecesidadResponse(Long id, Long vigenciaId, Long areaId, Long rubr
     BigDecimal cantidadAprobada, BigDecimal valorUnitarioAprobado, BigDecimal valorTotalAprobado,
     EstadoNecesidadPresupuestal estado, String observacionPresupuesto,
     Long creadoPorId, Long revisadoPorId, boolean activa, long version,
-    List<DistribucionResponse> distribuciones, LocalDateTime fechaCreacion, LocalDateTime fechaActualizacion) {}
+    List<DistribucionResponse> distribuciones, LocalDateTime fechaCreacion, LocalDateTime fechaActualizacion,
+    boolean aplicaDistribucion) {}

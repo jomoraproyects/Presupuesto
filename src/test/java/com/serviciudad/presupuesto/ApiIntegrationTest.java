@@ -47,7 +47,7 @@ class ApiIntegrationTest {
     @Test
     void migracionesAutenticacionRolesYArbol() throws Exception {
         assertThat(servicios.findAll()).hasSize(3);
-        assertThat(roles.findAll()).hasSize(4);
+        assertThat(roles.findAll()).hasSize(3);
         assertThat(usuarios.findByUsername("admin_prueba")).isPresent();
         assertThat(usuarios.findByUsername("admin_prueba").orElseThrow().getPasswordHash()).isNotEqualTo(ADMIN_PASSWORD);
 
@@ -56,6 +56,16 @@ class ApiIntegrationTest {
             .content("{\"username\":\"admin_prueba\",\"password\":\"incorrecta\"}"))
             .andExpect(status().isUnauthorized());
         String adminToken = login("admin_prueba", ADMIN_PASSWORD);
+        mvc.perform(post("/api/usuarios").header("Authorization", "Bearer " + adminToken)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"username\":\"perfil_anterior\",\"password\":\"" + CONSULTA_PASSWORD + "\",\"nombre\":\"Perfil anterior\",\"rol\":\"PRESUPUESTO\"}"))
+            .andExpect(status().isBadRequest());
+        mvc.perform(get("/api/auth/me").header("Authorization", "Bearer " + adminToken))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.username").value("admin_prueba"))
+            .andExpect(jsonPath("$.rol").value("SUPER_ADMIN"));
+        mvc.perform(options("/api/auth/login").header("Origin", "http://localhost:5173")
+            .header("Access-Control-Request-Method", "POST"))
+            .andExpect(status().isOk()).andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:5173"));
         mvc.perform(post("/api/areas").header("Authorization", "Bearer " + adminToken)
             .contentType(MediaType.APPLICATION_JSON).content("{\"codigo\":\"ADM\",\"nombre\":\"Administrativa\"}"))
             .andExpect(status().isCreated()).andExpect(jsonPath("$.id").isNumber());

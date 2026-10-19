@@ -17,6 +17,8 @@ public class DistribucionNecesidad {
     private Servicio servicio;
     @Column(nullable = false, precision = 5, scale = 2)
     private BigDecimal porcentaje;
+    @Column(name = "porcentaje_aprobado", precision = 5, scale = 2)
+    private BigDecimal porcentajeAprobado;
     @Column(name = "valor_solicitado_distribuido", nullable = false, precision = 19, scale = 2)
     private BigDecimal valorSolicitadoDistribuido;
     @Column(name = "valor_aprobado_distribuido", nullable = false, precision = 19, scale = 2)

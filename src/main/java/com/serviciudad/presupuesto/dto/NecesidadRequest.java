@@ -10,8 +10,9 @@ public record NecesidadRequest(
     Long areaId,
     @NotNull Long rubroPresupuestalId,
     @NotBlank @Size(max = 500) String descripcion,
-    @NotBlank @Size(max = 2000) String justificacion,
-    @NotBlank @Size(max = 60) String unidadMedida,
+    @Size(max = 2000) String justificacion,
+    @Size(max = 60) String unidadMedida,
     @NotNull @DecimalMin("0.0001") @Digits(integer = 15, fraction = 4) BigDecimal cantidadSolicitada,
     @NotNull @DecimalMin("0.00") @Digits(integer = 17, fraction = 2) BigDecimal valorUnitarioSolicitado,
-    List<@NotNull @Valid DistribucionRequest> distribuciones) {}
+    List<@NotNull @Valid DistribucionRequest> distribuciones,
+    Boolean aplicaDistribucion) {}

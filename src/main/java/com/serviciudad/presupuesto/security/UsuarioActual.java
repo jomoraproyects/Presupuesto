@@ -25,7 +25,5 @@ public class UsuarioActual {
 
     public boolean is(Usuario usuario, NombreRol rol) { return usuario.getRol().getNombre() == rol; }
     public boolean isAdmin(Usuario usuario) { return is(usuario, NombreRol.SUPER_ADMIN); }
-    public boolean isPresupuesto(Usuario usuario) {
-        return isAdmin(usuario) || is(usuario, NombreRol.PRESUPUESTO);
-    }
+    public boolean puedeRevisar(Usuario usuario) { return isAdmin(usuario); }
 }

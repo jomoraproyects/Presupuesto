@@ -47,6 +47,8 @@ class NecesidadIntegrationTest {
         long vigencia = request(post("/api/vigencias"), admin, Map.of(
             "anio", 2027, "nombre", "Presupuesto 2027", "fechaInicio", "2027-01-01", "fechaFin", "2027-12-31",
             "presupuestoDisponible", 60, "estado", "ABIERTA"), 201).get("id").asLong();
+        request(put("/api/vigencias/" + vigencia + "/participantes/" + area1), admin, Map.of("activo", true), 200);
+        request(put("/api/vigencias/" + vigencia + "/participantes/" + area2), admin, Map.of("activo", true), 200);
         long root = request(post("/api/rubros"), admin, Map.of("codigo", "2", "nombre", "GASTOS", "orden", 0), 201).get("id").asLong();
         long child = request(post("/api/rubros"), admin, Map.of("codigo", "2.1", "nombre", "HARDWARE",
             "rubroPadreId", root, "permiteMovimiento", true, "orden", 1), 201).get("id").asLong();
@@ -55,13 +57,16 @@ class NecesidadIntegrationTest {
             "nombre", "Sin área", "rol", "RESPONSABLE_AREA"), 409);
         createUser(admin, "area_operativa", NombreRol.RESPONSABLE_AREA, area1);
         createUser(admin, "area_administrativa", NombreRol.RESPONSABLE_AREA, area2);
-        createUser(admin, "presupuesto_fase2", NombreRol.PRESUPUESTO, null);
+        createUser(admin, "administrador_fase2", NombreRol.SUPER_ADMIN, null);
         createUser(admin, "consulta_fase2", NombreRol.CONSULTA, null);
         assertThat(usuarios.findByUsername("area_operativa").orElseThrow().getPasswordHash()).isNotEqualTo(USER_PASSWORD);
         String areaToken = login("area_operativa", USER_PASSWORD);
         String otherAreaToken = login("area_administrativa", USER_PASSWORD);
-        String budgetToken = login("presupuesto_fase2", USER_PASSWORD);
+        String budgetToken = login("administrador_fase2", USER_PASSWORD);
         String readerToken = login("consulta_fase2", USER_PASSWORD);
+        JsonNode profile = request(get("/api/auth/me"), areaToken, null, 200);
+        assertThat(profile.get("areaId").asLong()).isEqualTo(area1);
+        assertThat(profile.get("rol").asText()).isEqualTo("RESPONSABLE_AREA");
 
         long acueducto = 1L, alcantarillado = 2L, aseo = 3L;
         List<Map<String, Object>> shares = List.of(
@@ -78,6 +83,11 @@ class NecesidadIntegrationTest {
         long needId = created.get("id").asLong();
         assertThat(created.get("valorTotalSolicitado").decimalValue()).isEqualByComparingTo("100.00");
         assertThat(created.get("estado").asText()).isEqualTo("BORRADOR");
+        JsonNode draftArea = request(get("/api/presupuesto/vigencias/" + vigencia + "/mi-area"), areaToken, null, 200);
+        assertThat(draftArea.get("numeroNecesidades").asLong()).isEqualTo(1);
+        assertThat(draftArea.get("porEstado").get("BORRADOR").asLong()).isEqualTo(1);
+        assertThat(draftArea.get("totalSolicitado").decimalValue()).isEqualByComparingTo("100.00");
+        request(get("/api/presupuesto/vigencias/" + vigencia + "/mi-area"), budgetToken, null, 403);
         request(get("/api/necesidades/" + needId), otherAreaToken, null, 403);
         JsonNode ownList = request(get("/api/necesidades?areaId=" + area2 + "&servicioId=" + acueducto), areaToken, null, 200);
         assertThat(ownList.get("totalElements").asInt()).isEqualTo(1);
@@ -100,14 +110,20 @@ class NecesidadIntegrationTest {
         assertThat(approved.get("estado").asText()).isEqualTo("APROBADA_CON_AJUSTES");
         assertThat(approved.get("cantidadSolicitada").decimalValue()).isEqualByComparingTo("100.0000");
         assertThat(approved.get("cantidadAprobada").decimalValue()).isEqualByComparingTo("70.0000");
+        JsonNode approvedArea = request(get("/api/presupuesto/vigencias/" + vigencia + "/mi-area"), areaToken, null, 200);
+        assertThat(approvedArea.get("totalSolicitado").decimalValue()).isEqualByComparingTo("100.00");
+        assertThat(approvedArea.get("totalAprobado").decimalValue()).isEqualByComparingTo("70.00");
+        assertThat(approvedArea.get("porEstado").get("APROBADA_CON_AJUSTES").asLong()).isEqualTo(1);
 
         JsonNode summary = request(get("/api/presupuesto/vigencias/" + vigencia + "/resumen"), budgetToken, null, 200);
         assertThat(summary.get("totalSolicitado").decimalValue()).isEqualByComparingTo("100.00");
         assertThat(summary.get("totalAprobado").decimalValue()).isEqualByComparingTo("70.00");
         assertThat(summary.get("diferenciaContraTecho").decimalValue()).isEqualByComparingTo("10.00");
         JsonNode byArea = request(get("/api/presupuesto/vigencias/" + vigencia + "/por-area"), budgetToken, null, 200);
-        assertThat(byArea.get(0).get("areaId").asLong()).isEqualTo(area1);
-        assertThat(byArea.get(0).get("aprobado").decimalValue()).isEqualByComparingTo("70.00");
+        JsonNode ownRow = null;
+        for (JsonNode row : byArea) if (row.path("areaId").asLong() == area1) ownRow = row;
+        assertThat(ownRow).isNotNull();
+        assertThat(ownRow.get("aprobado").decimalValue()).isEqualByComparingTo("70.00");
         JsonNode byService = request(get("/api/presupuesto/vigencias/" + vigencia + "/por-servicio"), budgetToken, null, 200);
         assertThat(byService.size()).isEqualTo(3);
         assertConsolidadoServicio(byService, acueducto, "33.00", "23.10");
@@ -184,7 +200,7 @@ class NecesidadIntegrationTest {
         request(post("/api/necesidades/" + increasedId + "/enviar"), areaToken, null, 200);
         request(post("/api/necesidades/" + increasedId + "/iniciar-revision"), budgetToken, null, 200);
         JsonNode increased = request(patch("/api/necesidades/" + increasedId + "/ajuste"), budgetToken,
-            Map.of("valorUnitarioAprobado", 1.20), 200);
+            Map.of("valorUnitarioAprobado", 1.20, "observacionPresupuesto", "Actualización del precio cotizado"), 200);
         assertThat(increased.get("valorTotalSolicitado").decimalValue()).isEqualByComparingTo("5.00");
         assertThat(increased.get("valorTotalAprobado").decimalValue()).isEqualByComparingTo("6.00");
         request(post("/api/necesidades/" + increasedId + "/aprobar"), budgetToken, null, 200);

@@ -1,0 +1,262 @@
+[
+  {
+    "nombre": "SUELDO PERSONAL NOMINA ADMINISTRATIVO",
+    "orden": 1
+  },
+  {
+    "nombre": "DOTACION ADMINISTRATIVA",
+    "orden": 2
+  },
+  {
+    "nombre": "VIATICOS Y GASTOS DE VIAJE",
+    "orden": 3
+  },
+  {
+    "nombre": "CAPACITACION DE PERSONAL",
+    "orden": 4
+  },
+  {
+    "nombre": "BIENESTAR Y ESTIMULOS",
+    "orden": 5
+  },
+  {
+    "nombre": "CONTRATACIÓN PERSONAL ADMIISTRATIVO",
+    "orden": 6
+  },
+  {
+    "nombre": "COMPRA MATERIALES Y SUMINISTROS",
+    "orden": 7
+  },
+  {
+    "nombre": "COMPRA DE MAQUINARIA Y EQUIPO DE OFICINA",
+    "orden": 8
+  },
+  {
+    "nombre": "ADECUACION O CONSTRUCCION DE EDIFICACIONES Y TERRENOS",
+    "orden": 9
+  },
+  {
+    "nombre": "ADQUISICION DE HARDWARE",
+    "orden": 10
+  },
+  {
+    "nombre": "ADECUACION O CONSTRUCCION DE EDIFICACIONES Y TERRENOS",
+    "orden": 11
+  },
+  {
+    "nombre": "SEGURIDAD INDUSTRIAL ELEMENTOS",
+    "orden": 12
+  },
+  {
+    "nombre": "ELEMENTOS DE ASEO Y CAFETERIA",
+    "orden": 13
+  },
+  {
+    "nombre": "ADQUISICION DE SOFTWARE",
+    "orden": 14
+  },
+  {
+    "nombre": "SEGUROS ADMINISTRATIVO",
+    "orden": 15
+  },
+  {
+    "nombre": "CAPACITACION A LA COMUNIDAD",
+    "orden": 16
+  },
+  {
+    "nombre": "SEGURIDAD INDUSTRIAL SERVICIOS",
+    "orden": 17
+  },
+  {
+    "nombre": "RECEPCIONES OFICIALES Y CULTURALES",
+    "orden": 18
+  },
+  {
+    "nombre": "SERVICIOS DE ASEO, CAFETERIA Y RESTAURANTE",
+    "orden": 19
+  },
+  {
+    "nombre": "SERVICIOS PUBLICOS",
+    "orden": 20
+  },
+  {
+    "nombre": "SERVICIOS DE SISTEMATIZACION",
+    "orden": 21
+  },
+  {
+    "nombre": "GASTOS DE LEGALIZACION Y AVALUOS",
+    "orden": 22
+  },
+  {
+    "nombre": "IMPUESTO PREDIAL",
+    "orden": 23
+  },
+  {
+    "nombre": "CONTRIBUCION A LA SUPERINTENDENCIA DE SERVICIOS PUBLICOS DOMICILIARIOS",
+    "orden": 24
+  },
+  {
+    "nombre": "CONTRIBUCION A LA COMISION DE REGULACION DE AGUA POTABLE Y SANEAMIENTO BASICO",
+    "orden": 25
+  },
+  {
+    "nombre": "MULTAS",
+    "orden": 26
+  },
+  {
+    "nombre": "SANCIONES",
+    "orden": 27
+  },
+  {
+    "nombre": "INDUSTRIA Y COMERCIO",
+    "orden": 28
+  },
+  {
+    "nombre": "TASAS AMBIENTALES CARDER Y DESINCENTIVOS",
+    "orden": 29
+  },
+  {
+    "nombre": "GRAVAMEN AL MOVIMIENTO FINANCIERO",
+    "orden": 30
+  },
+  {
+    "nombre": "IMPUESTO A LA RENTA",
+    "orden": 31
+  },
+  {
+    "nombre": "OTROS IMPUESTOS",
+    "orden": 32
+  },
+  {
+    "nombre": "CONCILIACIONES Y SENTENCIAS JUDICIALES",
+    "orden": 33
+  },
+  {
+    "nombre": "ADQUISICION DE REPUESTOS",
+    "orden": 34
+  },
+  {
+    "nombre": "LLANTAS Y NEUMATICOS",
+    "orden": 35
+  },
+  {
+    "nombre": "COMBUSTIBLES - LUBRICANTES - FILTROS",
+    "orden": 36
+  },
+  {
+    "nombre": "COMPRA DE MATERIALES PARA OPERACION",
+    "orden": 37
+  },
+  {
+    "nombre": "COMPRA DE VEHICULOS",
+    "orden": 38
+  },
+  {
+    "nombre": "COMPRA DE MAQUINARIA Y EQUIPOS",
+    "orden": 39
+  },
+  {
+    "nombre": "ANALISIS FISICO QUIMICO, BACTERIOLOGICO, CARACTERIZACIONES",
+    "orden": 40
+  },
+  {
+    "nombre": "CALIBRACION DE EQUIPOS DE MEDICION",
+    "orden": 41
+  },
+  {
+    "nombre": "ALQUILER MAQUINARIA Y EQUIPOS",
+    "orden": 42
+  },
+  {
+    "nombre": "ALQUILER DE VEHICULOS",
+    "orden": 43
+  },
+  {
+    "nombre": "MANTENIMIENTO MAQUINARIA Y EQUIPOS",
+    "orden": 44
+  },
+  {
+    "nombre": "MONTAJE DE LLANTAS",
+    "orden": 45
+  },
+  {
+    "nombre": "CONTRATOS OPERACIÓN DE SERVICIOS",
+    "orden": 46
+  },
+  {
+    "nombre": "ENERGÍA ELECTRICA PLANTA DE BOMBEO",
+    "orden": 47
+  },
+  {
+    "nombre": "LEASING DE VEHICULOS Y MAQUINARIA",
+    "orden": 48
+  },
+  {
+    "nombre": "SEGUROS OPERATIVO",
+    "orden": 49
+  },
+  {
+    "nombre": "SEGURO OBLIGATORIO DE VEHICULOS",
+    "orden": 50
+  },
+  {
+    "nombre": "OPERACIÓN PLANTAS DE TRATAMIENTO",
+    "orden": 51
+  },
+  {
+    "nombre": "OBLIGACIONES AMBIENTALES ASOCIADAS",
+    "orden": 52
+  },
+  {
+    "nombre": "IMPUESTO PREDIAL",
+    "orden": 53
+  },
+  {
+    "nombre": "IMPUESTO DE VEHICULOS",
+    "orden": 54
+  },
+  {
+    "nombre": "OTROS IMPUESTOS",
+    "orden": 55
+  },
+  {
+    "nombre": "COMPRA AGUA EN BLOQUE",
+    "orden": 56
+  },
+  {
+    "nombre": "OTROS BIENES Y SERVICIOS",
+    "orden": 57
+  },
+  {
+    "nombre": "REEMBOLSOS CAJA MENOR",
+    "orden": 58
+  },
+  {
+    "nombre": "GASTOS FINANCIEROS",
+    "orden": 59
+  },
+  {
+    "nombre": "CREDITOS BANCA COMERCIAL",
+    "orden": 60
+  },
+  {
+    "nombre": "INTERESES LEASING OPERATIVO",
+    "orden": 61
+  },
+  {
+    "nombre": "INVERSIONES ACUEDUCTO",
+    "orden": 62
+  },
+  {
+    "nombre": "INVERSIONES ALCANTARILLADO",
+    "orden": 63
+  },
+  {
+    "nombre": "INVERSIONES ASEO",
+    "orden": 64
+  },
+  {
+    "nombre": "CUENTAS POR PAGAR",
+    "orden": 65
+  }
+]

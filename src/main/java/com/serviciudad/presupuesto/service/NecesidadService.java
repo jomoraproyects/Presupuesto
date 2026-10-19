@@ -27,6 +27,7 @@ public class NecesidadService {
     private final HistorialNecesidadRepository historiales;
     private final AreaRepository areas;
     private final VigenciaRepository vigencias;
+    private final AreaVigenciaRepository participantes;
     private final RubroRepository rubros;
     private final DistribucionService distribucion;
     private final NecesidadMapper mapper;
@@ -35,10 +36,12 @@ public class NecesidadService {
 
     public NecesidadService(NecesidadRepository necesidades, HistorialNecesidadRepository historiales,
         AreaRepository areas, VigenciaRepository vigencias, RubroRepository rubros,
-        DistribucionService distribucion, NecesidadMapper mapper, HistorialService historial, UsuarioActual actual) {
+        DistribucionService distribucion, NecesidadMapper mapper, HistorialService historial, UsuarioActual actual,
+        AreaVigenciaRepository participantes) {
         this.necesidades = necesidades; this.historiales = historiales; this.areas = areas;
         this.vigencias = vigencias; this.rubros = rubros; this.distribucion = distribucion;
         this.mapper = mapper; this.historial = historial; this.actual = actual;
+        this.participantes = participantes;
     }
 
     @Transactional(readOnly = true)
@@ -90,6 +93,8 @@ public class NecesidadService {
         n.setCreadoPor(actor);
         applyRequest(n, request, actor);
         necesidades.saveAndFlush(n);
+        participantes.findByVigenciaIdAndAreaId(n.getVigencia().getId(), n.getArea().getId())
+            .ifPresent(p -> { if (p.getEstado() == EstadoFormulario.PENDIENTE) p.setEstado(EstadoFormulario.BORRADOR); });
         historial.register(n, actor, AccionHistorial.CREACION, "Necesidad creada en borrador", null);
         return mapper.toResponse(n);
     }
@@ -98,11 +103,19 @@ public class NecesidadService {
         Usuario actor = actual.get();
         requireAreaWriter(actor);
         NecesidadPresupuestal n = lockedVisible(id, actor);
+        if (participantes.findByVigenciaIdAndAreaId(n.getVigencia().getId(), n.getArea().getId())
+            .map(AreaVigencia::isEnviada).orElse(false))
+            throw new BusinessException("La solicitud original ya fue enviada y no puede modificarse");
         if (n.getEstado() != EstadoNecesidadPresupuestal.BORRADOR && n.getEstado() != EstadoNecesidadPresupuestal.DEVUELTA) {
             throw new BusinessException("Solo se pueden editar necesidades en borrador o devueltas");
         }
         NecesidadResponse before = mapper.toResponse(n);
+        List<DistribucionRequest> approvedShares = n.getEstado() != EstadoNecesidadPresupuestal.BORRADOR
+            || n.getRevisadoPor() == null ? null : n.getDistribuciones().stream()
+            .filter(d -> d.getPorcentajeAprobado() != null && d.getPorcentajeAprobado().signum() > 0)
+            .map(d -> new DistribucionRequest(d.getServicio().getId(), d.getPorcentajeAprobado())).toList();
         applyRequest(n, request, actor);
+        if (approvedShares != null) distribucion.setApproved(n, approvedShares);
         necesidades.saveAndFlush(n);
         historial.register(n, actor, AccionHistorial.MODIFICACION, "Necesidad modificada por el área", before);
         return mapper.toResponse(n);
@@ -117,8 +130,8 @@ public class NecesidadService {
         if (!n.getArea().isActiva()) throw new BusinessException("El área está inactiva");
         validateRubro(n.getRubroPresupuestal(), n.getVigencia());
         if (n.getValorTotalSolicitado().signum() <= 0) throw new BusinessException("El total solicitado debe ser mayor que cero");
-        if (n.getDistribuciones().isEmpty() || n.getDistribuciones().stream()
-            .map(DistribucionNecesidad::getPorcentaje).reduce(BigDecimal.ZERO, BigDecimal::add).compareTo(HUNDRED) != 0) {
+        if (n.isAplicaDistribucion() && (n.getDistribuciones().isEmpty() || n.getDistribuciones().stream()
+            .map(DistribucionNecesidad::getPorcentaje).reduce(BigDecimal.ZERO, BigDecimal::add).compareTo(HUNDRED) != 0)) {
             throw new BusinessException("La necesidad debe distribuirse al 100.00 % entre servicios");
         }
         if (n.getDistribuciones().stream().anyMatch(d -> !d.getServicio().isActivo())) {
@@ -130,7 +143,15 @@ public class NecesidadService {
             n.setValorUnitarioSolicitadoOriginal(n.getValorUnitarioSolicitado());
             n.setValorTotalSolicitadoOriginal(n.getValorTotalSolicitado());
         }
-        n.setEstado(EstadoNecesidadPresupuestal.ENVIADA);
+        boolean preReviewed = n.getEstado() == EstadoNecesidadPresupuestal.BORRADOR && n.getRevisadoPor() != null;
+        n.setEstado(preReviewed ? EstadoNecesidadPresupuestal.EN_REVISION : EstadoNecesidadPresupuestal.ENVIADA);
+        if (!preReviewed) {
+            n.setCantidadAprobada(n.getCantidadSolicitada());
+            n.setValorUnitarioAprobado(n.getValorUnitarioSolicitado());
+            n.setValorTotalAprobado(n.getValorTotalSolicitado());
+            n.getDistribuciones().forEach(d -> d.setPorcentajeAprobado(d.getPorcentaje()));
+        }
+        distribucion.recalculate(n);
         necesidades.saveAndFlush(n);
         historial.register(n, actor, AccionHistorial.ENVIO, "Necesidad enviada a Presupuesto", before);
         return mapper.toResponse(n);
@@ -149,31 +170,66 @@ public class NecesidadService {
         return mapper.toResponse(n);
     }
 
+    public NecesidadResponse guardarAprobado(Long id, AjusteNecesidadRequest request) {
+        Usuario actor = actual.get(); requireReviewer(actor);
+        NecesidadPresupuestal n = lockedVisible(id, actor);
+        requireReviewOpen(n.getVigencia());
+        requireState(n, EstadoNecesidadPresupuestal.BORRADOR, EstadoNecesidadPresupuestal.ENVIADA, EstadoNecesidadPresupuestal.EN_REVISION,
+            EstadoNecesidadPresupuestal.APROBADA, EstadoNecesidadPresupuestal.APROBADA_CON_AJUSTES, EstadoNecesidadPresupuestal.RECHAZADA);
+        AreaVigencia form = participantes.findByVigenciaIdAndAreaId(n.getVigencia().getId(), n.getArea().getId())
+            .orElseThrow(() -> new BusinessException("La dependencia no participa en esta vigencia"));
+        if (!form.isActiva() || (!form.isEnviada() && n.getEstado() != EstadoNecesidadPresupuestal.BORRADOR))
+            throw new BusinessException("El formulario no está habilitado para revisión");
+        NecesidadResponse before = mapper.toResponse(n);
+        aplicarAjuste(n, request, false);
+        if (form.isEnviada()) {
+            n.setEstado(EstadoNecesidadPresupuestal.EN_REVISION);
+            form.setEstado(EstadoFormulario.EN_REVISION);
+        }
+        n.setRevisadoPor(actor);
+        distribucion.recalculate(n);
+        necesidades.saveAndFlush(n);
+        historial.register(n, actor, AccionHistorial.AJUSTE, "Presupuesto guardó el aprobado", before);
+        return mapper.toResponse(n);
+    }
+
     public NecesidadResponse adjust(Long id, AjusteNecesidadRequest request) {
         Usuario actor = actual.get(); requireReviewer(actor);
         NecesidadPresupuestal n = lockedVisible(id, actor);
         requireReviewOpen(n.getVigencia());
         requireState(n, EstadoNecesidadPresupuestal.EN_REVISION);
+        NecesidadResponse before = mapper.toResponse(n);
+        aplicarAjuste(n, request, true);
+        n.setRevisadoPor(actor);
+        necesidades.saveAndFlush(n);
+        historial.register(n, actor, AccionHistorial.AJUSTE, "Presupuesto ajustó la necesidad", before);
+        return mapper.toResponse(n);
+    }
+
+    private void aplicarAjuste(NecesidadPresupuestal n, AjusteNecesidadRequest request, boolean requireReason) {
         if (request.cantidadAprobada() == null && request.valorUnitarioAprobado() == null
-            && (request.observacionPresupuesto() == null || request.observacionPresupuesto().isBlank())) {
+            && (request.observacionPresupuesto() == null || request.observacionPresupuesto().isBlank())
+            && request.distribucionesAprobadas() == null) {
             throw new BusinessException("El ajuste debe incluir una cantidad, valor unitario u observación");
         }
-        NecesidadResponse before = mapper.toResponse(n);
         if (request.cantidadAprobada() != null || request.valorUnitarioAprobado() != null) {
             BigDecimal quantity = request.cantidadAprobada() != null ? request.cantidadAprobada()
                 : n.getCantidadAprobada() != null ? n.getCantidadAprobada() : n.getCantidadSolicitada();
             BigDecimal unit = request.valorUnitarioAprobado() != null ? request.valorUnitarioAprobado()
                 : n.getValorUnitarioAprobado() != null ? n.getValorUnitarioAprobado() : n.getValorUnitarioSolicitado();
+            BigDecimal previousQuantity = n.getCantidadAprobada() == null ? n.getCantidadSolicitada() : n.getCantidadAprobada();
+            BigDecimal previousUnit = n.getValorUnitarioAprobado() == null ? n.getValorUnitarioSolicitado() : n.getValorUnitarioAprobado();
+            if (requireReason && (quantity.compareTo(previousQuantity) != 0 || unit.compareTo(previousUnit) != 0)
+                && (request.observacionPresupuesto() == null || request.observacionPresupuesto().isBlank())) {
+                throw new BusinessException("Debe indicar el motivo de la reducción o aumento");
+            }
             n.setCantidadAprobada(quantity);
             n.setValorUnitarioAprobado(unit);
             n.setValorTotalAprobado(money(quantity.multiply(unit)));
             distribucion.recalculate(n);
         }
         if (request.observacionPresupuesto() != null) n.setObservacionPresupuesto(request.observacionPresupuesto().trim());
-        n.setRevisadoPor(actor);
-        necesidades.saveAndFlush(n);
-        historial.register(n, actor, AccionHistorial.AJUSTE, "Presupuesto ajustó la necesidad", before);
-        return mapper.toResponse(n);
+        if (request.distribucionesAprobadas() != null) distribucion.setApproved(n, request.distribucionesAprobadas());
     }
 
     public NecesidadResponse approve(Long id) {
@@ -182,16 +238,7 @@ public class NecesidadService {
         requireReviewOpen(n.getVigencia());
         requireState(n, EstadoNecesidadPresupuestal.EN_REVISION);
         NecesidadResponse before = mapper.toResponse(n);
-        if (n.getValorTotalAprobado() == null) {
-            n.setCantidadAprobada(n.getCantidadSolicitada());
-            n.setValorUnitarioAprobado(n.getValorUnitarioSolicitado());
-            n.setValorTotalAprobado(n.getValorTotalSolicitado());
-        }
-        if (n.getValorTotalAprobado().signum() == 0) n.setEstado(EstadoNecesidadPresupuestal.RECHAZADA);
-        else if (n.getCantidadAprobada().compareTo(n.getCantidadSolicitada()) == 0
-            && n.getValorUnitarioAprobado().compareTo(n.getValorUnitarioSolicitado()) == 0) {
-            n.setEstado(EstadoNecesidadPresupuestal.APROBADA);
-        } else n.setEstado(EstadoNecesidadPresupuestal.APROBADA_CON_AJUSTES);
+        aplicarEstadoAprobado(n);
         n.setRevisadoPor(actor);
         distribucion.recalculate(n);
         necesidades.saveAndFlush(n);
@@ -199,6 +246,24 @@ public class NecesidadService {
             ? AccionHistorial.RECHAZO : AccionHistorial.APROBACION;
         historial.register(n, actor, action, "Presupuesto finalizó la revisión", before);
         return mapper.toResponse(n);
+    }
+
+    private void aplicarEstadoAprobado(NecesidadPresupuestal n) {
+        if (n.getValorTotalAprobado() == null) {
+            n.setCantidadAprobada(n.getCantidadSolicitada());
+            n.setValorUnitarioAprobado(n.getValorUnitarioSolicitado());
+            n.setValorTotalAprobado(n.getValorTotalSolicitado());
+        }
+        if (n.getValorTotalAprobado().signum() == 0) {
+            if (n.getObservacionPresupuesto() == null || n.getObservacionPresupuesto().isBlank()) {
+                throw new BusinessException("Debe indicar el motivo del rechazo de una necesidad con aprobado cero");
+            }
+            n.setEstado(EstadoNecesidadPresupuestal.RECHAZADA);
+        }
+        else if (n.getCantidadAprobada().compareTo(n.getCantidadSolicitada()) == 0
+            && n.getValorUnitarioAprobado().compareTo(n.getValorUnitarioSolicitado()) == 0) {
+            n.setEstado(EstadoNecesidadPresupuestal.APROBADA);
+        } else n.setEstado(EstadoNecesidadPresupuestal.APROBADA_CON_AJUSTES);
     }
 
     public NecesidadResponse reject(Long id, ObservacionRequest request) {
@@ -249,18 +314,47 @@ public class NecesidadService {
 
     private void applyRequest(NecesidadPresupuestal n, NecesidadRequest request, Usuario actor) {
         Area area = resolveArea(request.areaId(), actor, n.getArea());
-        Vigencia vigencia = vigencias.findById(request.vigenciaId())
+        Vigencia vigencia = vigencias.findForUpdate(request.vigenciaId())
             .orElseThrow(() -> new NotFoundException("Vigencia no encontrada"));
         requireFormulationOpen(vigencia);
+        if (n.getId() == null && participantes.findByVigenciaIdAndAreaId(vigencia.getId(), area.getId())
+            .map(AreaVigencia::isEnviada).orElse(false)) {
+            throw new BusinessException("El formulario ya fue enviado a Presupuesto; no puede agregar nuevos ítems");
+        }
+        if (n.getId() == null && !participantes.existsByVigenciaIdAndAreaIdAndActivaTrue(vigencia.getId(), area.getId())) {
+            throw new BusinessException("El área no está habilitada como participante de esta vigencia");
+        }
+        if (n.getId() != null && (!n.getVigencia().getId().equals(vigencia.getId()) || !n.getArea().getId().equals(area.getId()))) {
+            throw new BusinessException("No puede cambiar el área ni la vigencia de una necesidad existente");
+        }
         RubroPresupuestal rubro = rubros.findById(request.rubroPresupuestalId())
             .orElseThrow(() -> new NotFoundException("Rubro no encontrado"));
         validateRubro(rubro, vigencia);
+        if (rubro.getVigencia() == null && (n.getId() == null || !n.getRubroPresupuestal().getId().equals(rubro.getId()))
+            && rubros.findAllByCodigo(rubro.getCodigo()).stream().anyMatch(r -> r.getVigencia() != null
+                && r.getVigencia().getId().equals(vigencia.getId()))) {
+            throw new BusinessException("Seleccione la categoría propia de esta vigencia en lugar de la plantilla global");
+        }
         n.setArea(area); n.setVigencia(vigencia); n.setRubroPresupuestal(rubro);
-        n.setDescripcion(request.descripcion().trim()); n.setJustificacion(request.justificacion().trim());
-        n.setUnidadMedida(request.unidadMedida().trim());
+        n.setDescripcion(request.descripcion().trim());
+        // El formulario compacto omite estos campos; conservar los datos de clientes anteriores.
+        if (request.justificacion() != null) n.setJustificacion(request.justificacion().trim());
+        else if (n.getJustificacion() == null) n.setJustificacion("");
+        if (request.unidadMedida() != null) n.setUnidadMedida(request.unidadMedida().trim());
+        else if (n.getUnidadMedida() == null) n.setUnidadMedida("");
         n.setCantidadSolicitada(request.cantidadSolicitada());
         n.setValorUnitarioSolicitado(request.valorUnitarioSolicitado());
         n.setValorTotalSolicitado(money(request.cantidadSolicitada().multiply(request.valorUnitarioSolicitado())));
+        boolean applies = request.aplicaDistribucion() == null
+            ? (n.getId() == null ? request.distribuciones() != null && !request.distribuciones().isEmpty() : n.isAplicaDistribucion())
+            : request.aplicaDistribucion();
+        if (applies && (request.distribuciones() == null || request.distribuciones().isEmpty())) {
+            throw new BusinessException("La distribución debe sumar exactamente 100.00 %");
+        }
+        if (!applies && request.distribuciones() != null && !request.distribuciones().isEmpty()) {
+            throw new BusinessException("No aplica distribución requiere una lista de servicios vacía");
+        }
+        n.setAplicaDistribucion(applies);
         distribucion.set(n, request.distribuciones());
     }
 
@@ -277,8 +371,9 @@ public class NecesidadService {
     }
 
     private void validateRubro(RubroPresupuestal rubro, Vigencia vigencia) {
-        if (!rubro.isActivo() || !rubro.isPermiteMovimiento()) {
-            throw new BusinessException("El rubro debe estar activo y permitir movimiento");
+        if (!rubro.isActivo() || !rubro.isPermiteMovimiento() || !rubro.isCategoriaFormulacion()
+            || rubros.existsByRubroPadreIdAndActivoTrue(rubro.getId())) {
+            throw new BusinessException("El rubro debe ser una categoría activa de formulación, permitir movimiento y no tener hijos activos");
         }
         if (rubro.getVigencia() != null && !rubro.getVigencia().getId().equals(vigencia.getId())) {
             throw new BusinessException("El rubro pertenece a otra vigencia");
@@ -301,12 +396,12 @@ public class NecesidadService {
         }
     }
     private void requireAreaWriter(Usuario user) {
-        if (!actual.isAdmin(user) && !actual.is(user, NombreRol.RESPONSABLE_AREA)) {
+        if (!actual.is(user, NombreRol.RESPONSABLE_AREA)) {
             throw new AccessDeniedException("Solo el área responsable puede realizar esta operación");
         }
     }
     private void requireReviewer(Usuario user) {
-        if (!actual.isPresupuesto(user)) throw new AccessDeniedException("Solo Presupuesto puede revisar necesidades");
+        if (!actual.puedeRevisar(user)) throw new AccessDeniedException("Solo el administrador de presupuesto puede revisar necesidades");
     }
     private BigDecimal money(BigDecimal amount) {
         BigDecimal rounded = amount.setScale(2, RoundingMode.HALF_UP);

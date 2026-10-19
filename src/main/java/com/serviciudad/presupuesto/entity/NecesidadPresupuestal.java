@@ -56,6 +56,8 @@ public class NecesidadPresupuestal extends Auditable {
     private boolean activa = true;
     @Version @Column(nullable = false)
     private long version;
+    @Column(name = "aplica_distribucion", nullable = false)
+    private boolean aplicaDistribucion;
     @OneToMany(mappedBy = "necesidad", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DistribucionNecesidad> distribuciones = new ArrayList<>();
 }
