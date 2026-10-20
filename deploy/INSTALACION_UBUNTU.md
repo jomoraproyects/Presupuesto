@@ -29,10 +29,10 @@ HTTPS en el puerto propio de Presupuesto, sin modificar Seleccion.
 3. Clonar el codigo en la carpeta elegida:
 
    ```bash
-   git clone --branch codex/fase-3-frontend https://github.com/jomoraproyects/Presupuesto.git /home/serviciudad/Escritorio/presupuesto
+   git clone --branch main https://github.com/jomoraproyects/Presupuesto.git /home/serviciudad/Escritorio/presupuesto
    ```
 
-   Esta es la rama publicada actualmente; `main` aun no contiene estos cambios.
+   `main` es la rama que se despliega y actualiza en la VM.
 4. En MySQL crear **solo** la base y el usuario de Presupuesto:
 
    ```sql
@@ -80,7 +80,7 @@ HTTPS en el puerto propio de Presupuesto, sin modificar Seleccion.
 3. Dentro de `/home/serviciudad/Escritorio/presupuesto`:
 
    ```bash
-   git pull --ff-only origin codex/fase-3-frontend
+   git pull --ff-only origin main
    JAVA_HOME="$PWD/.local/jdk/runtime" sh ./mvnw clean verify
    cd frontend
    PATH="/home/serviciudad/Escritorio/presupuesto/.local/node/runtime/bin:$PATH" npm ci
