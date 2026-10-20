@@ -16,7 +16,7 @@ export function CrearPresupuestoPage() {
   const [anio, setAnio] = useState(new Date().getFullYear() + 1)
   const [conceptos, setConceptos] = useState<Rubro[]>([])
   const [nombre, setNombre] = useState('')
-  const [orden, setOrden] = useState(66)
+  const [orden, setOrden] = useState(85)
   const [busy, setBusy] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -80,11 +80,11 @@ export function CrearPresupuestoPage() {
         {vigencia.estado === 'BORRADOR' ? <button className="btn btn-primary" disabled={busy} onClick={() => void run(async () => { await configuracionService.publishBudget(vigencia.id); await refresh() }, 'Presupuesto enviado a las dependencias activas.')}>ENVIAR A DEPENDENCIAS</button> : <span className="badge text-bg-success">Enviado a dependencias</span>}</div>
       {vigencia.estado === 'BORRADOR' && <form onSubmit={add} className="row g-2 align-items-end mb-3"><div className="col-md-7"><label className="form-label" htmlFor="nuevo-concepto">Nuevo concepto</label><input id="nuevo-concepto" className="form-control" maxLength={200} required value={nombre} onChange={e => setNombre(e.target.value)} /></div><div className="col-md-2"><label className="form-label" htmlFor="nuevo-orden">Orden</label><input id="nuevo-orden" type="number" min="0" step="1" className="form-control" value={orden} onChange={e => setOrden(Number(e.target.value))} /></div><div className="col-md-auto"><button className="btn btn-outline-primary" disabled={busy}>Agregar concepto</button></div></form>}
       <div className="card section-card border-0"><div className="table-responsive"><table className="table align-middle mb-0"><thead><tr><th>Orden</th><th>Concepto</th><th>Activo</th><th></th></tr></thead><tbody>{conceptos.map(r => <tr key={r.id}><td>{r.orden}</td><td>{r.nombre}</td><td>{r.activo ? 'Sí' : 'No'}</td><td>{vigencia.estado === 'BORRADOR' && <div className="d-flex gap-2 justify-content-end"><button className="btn btn-outline-secondary btn-sm" disabled={busy} onClick={() => { const value = window.prompt('Nuevo orden', String(r.orden)); if (value !== null && /^\d+$/.test(value)) changeConcept(r, { orden: Number(value) }) }}>Cambiar orden</button><button className="btn btn-outline-primary btn-sm" disabled={busy} onClick={() => { const value = window.prompt('Nombre del concepto', r.nombre); if (value?.trim()) void run(async () => { const updated = await conceptosService.update(r.id, { nombre: value.trim(), orden: r.orden, activo: r.activo, vigenciaId: id }); setConceptos(rows => rows.map(row => row.id === r.id ? updated : row)) }, 'Concepto actualizado.') }}>Editar</button><button className="btn btn-outline-secondary btn-sm" disabled={busy} onClick={() => changeConcept(r, { activo: !r.activo })}>{r.activo ? 'Desactivar' : 'Activar'}</button></div>}</td></tr>)}</tbody></table></div></div>
-      <p className="small text-muted mt-2">Los conceptos con el mismo nombre mantienen IDs y posiciones independientes. <Link to="/admin/rubros">Administrar conceptos</Link></p>
+      <p className="small text-muted mt-2">Los conceptos que agregues aquí también quedan guardados en el catálogo general. Los nombres repetidos mantienen IDs independientes. <Link to="/admin/rubros">Administrar y eliminar conceptos</Link></p>
     </>}
     {vigencias.length > 0 && <section className="card section-card border-danger-subtle mt-4" aria-labelledby="delete-budget-title"><div className="card-body">
       <h2 id="delete-budget-title" className="h5 mb-2">Eliminar presupuestos</h2>
-      <p className="text-muted mb-3">Estas acciones eliminan también los formularios, ítems, distribuciones y revisiones del año elegido. Los usuarios, dependencias y conceptos base se conservan.</p>
+      <p className="text-muted mb-3">Se eliminan las vigencias elegidas y sus formularios, ítems, distribuciones y revisiones. Todos los conceptos creados se conservan en el catálogo general, junto con los usuarios y dependencias. Los conceptos solo se eliminan uno a uno desde su administración.</p>
       <div className="d-flex flex-wrap gap-2">
         {vigencia && <button type="button" className="btn btn-outline-danger" disabled={busy} onClick={() => { setDeleteMode('year'); setConfirmation('') }}>Eliminar Presupuesto {vigencia.anio}</button>}
         <button type="button" className="btn btn-outline-danger" disabled={busy} onClick={() => { setDeleteMode('all'); setConfirmation('') }}>Reiniciar todo</button>

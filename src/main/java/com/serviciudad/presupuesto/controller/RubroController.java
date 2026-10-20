@@ -25,6 +25,11 @@ public class RubroController {
     public RubroResponse editarConcepto(@PathVariable Long id, @Valid @RequestBody ConceptoRequest request) { return service.editarConcepto(id, request); }
     @PatchMapping("/conceptos/{id}/estado") @PreAuthorize("hasRole('SUPER_ADMIN')")
     public RubroResponse estadoConcepto(@PathVariable Long id, @Valid @RequestBody EstadoRequest request) { return service.estadoConcepto(id, request); }
+    @DeleteMapping("/conceptos/{id}") @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<Void> eliminarConcepto(@PathVariable Long id) {
+        service.eliminarConcepto(id);
+        return ResponseEntity.noContent().build();
+    }
     @GetMapping("/arbol") public List<RubroArbolResponse> tree(@RequestParam(required = false) Long vigenciaId) { return service.tree(vigenciaId); }
     @GetMapping("/{id}") public RubroResponse get(@PathVariable Long id) { return service.get(id); }
     @PostMapping @PreAuthorize("hasRole('SUPER_ADMIN')")

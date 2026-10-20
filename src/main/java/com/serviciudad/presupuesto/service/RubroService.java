@@ -33,15 +33,40 @@ public class RubroService {
             .filter(RubrosAnuales::concepto).map(this::toResponse).toList();
     }
     public RubroResponse crearConcepto(ConceptoRequest request) {
-        RubroResponse created = create(new RubroRequest("FORM.CONCEPTO." + UUID.randomUUID(), nombreConcepto(request.nombre()),
+        String codigo = "FORM.CONCEPTO." + UUID.randomUUID();
+        if (request.vigenciaId() != null) {
+            asegurarCatalogoAnual(request.vigenciaId());
+            RubroResponse plantilla = create(new RubroRequest(codigo, nombreConcepto(request.nombre()),
+                request.descripcion() == null ? null : request.descripcion().trim(), null, true, null, request.orden(), true));
+            if (Boolean.FALSE.equals(request.activo())) setEstado(plantilla.id(), new EstadoRequest(false));
+        }
+        RubroResponse created = create(new RubroRequest(codigo, nombreConcepto(request.nombre()),
             request.descripcion() == null ? null : request.descripcion().trim(), null, true, request.vigenciaId(), request.orden(), true));
         return Boolean.FALSE.equals(request.activo()) ? setEstado(created.id(), new EstadoRequest(false)) : created;
+    }
+    private void asegurarCatalogoAnual(Long vigenciaId) {
+        var catalogo = repository.findAllByOrderByOrdenAscIdAsc();
+        if (catalogo.stream().anyMatch(r -> RubrosAnuales.concepto(r) && r.getVigencia() != null
+            && r.getVigencia().getId().equals(vigenciaId))) return;
+        Vigencia vigencia = vigencias.findById(vigenciaId).orElseThrow(() -> new NotFoundException("Vigencia no encontrada"));
+        for (var base : catalogo) if (RubrosAnuales.concepto(base) && base.getVigencia() == null && !base.isEliminado()) {
+            if (necesidades.existsByVigenciaIdAndRubroPresupuestalId(vigenciaId, base.getId())) continue;
+            RubroPresupuestal copy = new RubroPresupuestal();
+            copy.setCodigo(base.getCodigo()); copy.setNombre(base.getNombre()); copy.setDescripcion(base.getDescripcion());
+            copy.setOrden(base.getOrden()); copy.setActivo(base.isActivo()); copy.setPermiteMovimiento(true);
+            copy.setCategoriaFormulacion(true); copy.setVigencia(vigencia);
+            repository.save(copy);
+        }
     }
     public RubroResponse editarConcepto(Long id, ConceptoRequest request) {
         RubroPresupuestal r = concepto(id);
         // La identidad y la vigencia se conservan: editar no reemplaza ítems ni históricos.
         r.setNombre(nombreConcepto(request.nombre())); r.setOrden(request.orden());
         if (request.descripcion() != null) r.setDescripcion(request.descripcion().trim());
+        if (r.getVigencia() != null) repository.findAllByCodigo(r.getCodigo()).stream()
+            .filter(base -> base.getVigencia() == null && !base.isEliminado()).forEach(base -> {
+                base.setNombre(r.getNombre()); base.setOrden(r.getOrden()); base.setDescripcion(r.getDescripcion());
+            });
         if (request.activo() != null) return setEstado(id, new EstadoRequest(request.activo()));
         return toResponse(repository.saveAndFlush(r));
     }
@@ -49,14 +74,24 @@ public class RubroService {
         concepto(id);
         return setEstado(id, request);
     }
+    public void eliminarConcepto(Long id) {
+        RubroPresupuestal r = concepto(id);
+        if (r.isActivo()) throw new BusinessException("Desactive el concepto antes de eliminarlo");
+        // Se retira del catálogo y de futuras formulaciones; los ítems históricos conservan sus referencias.
+        repository.findAllByCodigo(r.getCodigo()).forEach(copy -> {
+            copy.setActivo(false); copy.setEliminado(true);
+        });
+        repository.flush();
+    }
     private RubroPresupuestal concepto(Long id) {
         RubroPresupuestal r = find(id);
+        if (r.isEliminado()) throw new NotFoundException("Concepto eliminado");
         if (!RubrosAnuales.concepto(r)) throw new BusinessException("El registro no es un concepto del formulario");
         return r;
     }
     private String nombreConcepto(String nombre) {
         if (nombre.trim().equalsIgnoreCase("TOTAL")) throw new BusinessException("TOTAL es calculado y no puede ser un concepto editable");
-        return nombre.trim();
+        return nombre.trim().toUpperCase(Locale.ROOT);
     }
     public RubroResponse create(RubroRequest request) {
         RubroPresupuestal rubro = new RubroPresupuestal(); apply(rubro, request);
@@ -73,6 +108,7 @@ public class RubroService {
     }
     public RubroResponse setEstado(Long id, EstadoRequest request) {
         RubroPresupuestal rubro = find(id);
+        if (rubro.isEliminado()) throw new BusinessException("El concepto fue eliminado del catálogo");
         if (!request.activo() && repository.existsByRubroPadreIdAndActivoTrue(id)) {
             throw new BusinessException("Desactive primero los rubros hijos activos");
         }
@@ -98,6 +134,7 @@ public class RubroService {
         return roots.stream().map(this::toTree).toList();
     }
     private void apply(RubroPresupuestal rubro, RubroRequest request) {
+        if (rubro.isEliminado()) throw new BusinessException("El concepto fue eliminado del catálogo");
         Vigencia vigencia = request.vigenciaId() == null ? null : vigencias.findById(request.vigenciaId())
             .orElseThrow(() -> new NotFoundException("Vigencia no encontrada"));
         if (vigencia != null && !vigencia.isActiva()) throw new BusinessException("La vigencia está inactiva");

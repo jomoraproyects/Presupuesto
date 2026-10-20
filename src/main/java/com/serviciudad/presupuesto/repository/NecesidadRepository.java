@@ -20,6 +20,7 @@ public interface NecesidadRepository extends JpaRepository<NecesidadPresupuestal
     @EntityGraph(attributePaths = {"distribuciones", "rubroPresupuestal"})
     List<NecesidadPresupuestal> findByVigenciaIdAndActivaTrueOrderByIdAsc(Long vigenciaId);
     boolean existsByRubroPresupuestalId(Long rubroId);
+    boolean existsByVigenciaIdAndRubroPresupuestalId(Long vigenciaId, Long rubroId);
 
     @Query("select n.rubroPresupuestal.id as rubroId, sum(n.valorTotalSolicitado) as solicitado, " +
         "sum(n.valorTotalAprobado) as aprobado from NecesidadPresupuestal n " +

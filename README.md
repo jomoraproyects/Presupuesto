@@ -15,6 +15,10 @@ Para instalarlo en la carpeta `~/Escritorio/presupuesto` de la VM Ubuntu, con un
 
 La interfaz principal expone PENDIENTE, BORRADOR, ENVIADO, EN_REVISION y APROBADO. Se conservan los endpoints históricos para compatibilidad. Nómina, Macro final, exportación Excel, ejecución, correos, firmas y aprobaciones adicionales quedan fuera de esta iteración.
 
+**Conceptos del formulario** administra el catálogo general, con búsqueda por nombre, descripción u orden y filtro de activos/inactivos. V10 reemplaza las 65 plantillas iniciales por las 85 filas de las capturas del usuario; `docs/conceptos-catalogo-general.json` conserva nombres en mayúsculas, repetidos y las dos filas de orden 81. Los IDs anteriores que tienen históricos no se reutilizan para conceptos diferentes.
+
+Agregar un concepto al preparar un año también lo guarda en el catálogo general. Los nuevos años toman una copia del catálogo vigente. Eliminar un año o todos los presupuestos borra sus formularios, ítems, distribuciones y revisiones, y conserva el catálogo, incluidos los conceptos personalizados. Para retirar un concepto se debe desactivar y luego pulsar **Eliminar**, con confirmación y permiso SUPER_ADMIN; desaparece del catálogo y de nuevas formulaciones, conservando los ítems y valores históricos asociados.
+
 ## Verificación
 
 Con JDK 21 en `JAVA_HOME`, ejecutar `./mvnw.cmd clean verify` (en Windows se configuró un agente Mockito para evitar el bloqueo de autoanexado) y `npm run build` dentro de `frontend`. Las pruebas de integración cubren envío anual, aislamiento por área, varios ítems por concepto, distribución solicitada y aprobada, ajustes, aprobación y totales consolidados.
@@ -36,7 +40,7 @@ El esquema lo crea Flyway (`src/main/resources/db/migration`). `V3__necesidades.
 
 `start-local.ps1` inicia backend y frontend en segundo plano y crea un SUPER_ADMIN con usuario `admin` y contraseña aleatoria. Las credenciales se guardan únicamente en `.local/settings.json`, excluido de Git. En el perfil local, `adminPassword` se sincroniza con la cuenta `admin` al arrancar y admite al menos 11 caracteres. Abrir `http://localhost:5173`; con `-Lan` el frontend también queda disponible para la red local. La base H2 de desarrollo se conserva en `.local/data/presupuesto.mv.db` entre reinicios; el backend escucha solo en este equipo y el frontend transmite `/api` mediante su proxy.
 
-`prepare-local.ps1` prepara la vigencia 2027 y la plantilla inicial, sin necesidades ni importes. La base actual ya tiene el catálogo de **Ff.xlsx**, hoja **final**: 449 códigos presupuestales originales y 116 categorías de la iteración anterior, con 264 destinos por servicio. El formulario actual usa los 65 conceptos reales cargados por V7. No se importaron valores históricos del Excel. El techo queda en cero para que lo configure Presupuesto.
+`prepare-local.ps1` prepara la vigencia 2027 y la plantilla inicial, sin necesidades ni importes. La importación anterior de **Ff.xlsx**, hoja **final**, conserva sus códigos y categorías históricos. El catálogo general actual usa las 85 filas cargadas por V10. No se importan valores históricos del Excel. El techo queda en cero para que lo configure Presupuesto.
 
 El catálogo reproducible está en `docs/catalogo-final.json`: conserva las 495 filas originales, incluidas 46 repeticiones. Un código repetido representa un solo rubro; se usa el primer nombre y orden, y todas las variantes permanecen en el registro de origen. Las tres cabeceras numéricas se almacenan como su texto visible (`2.2`, `2.3`, `2.4`). Los espacios, comas y guiones de los demás códigos se conservan exactamente.
 

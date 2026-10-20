@@ -21,7 +21,11 @@ final class RubrosAnuales {
     }
     static List<RubroPresupuestal> efectivos(List<RubroPresupuestal> catalogo, Long vigenciaId) {
         Set<String> propios = codigosPropios(catalogo, vigenciaId);
-        return catalogo.stream().filter(r -> r.getVigencia() == null ? !propios.contains(r.getCodigo())
+        boolean conceptosAnuales = catalogo.stream().anyMatch(r -> concepto(r) && r.getVigencia() != null
+            && r.getVigencia().getId().equals(vigenciaId));
+        return catalogo.stream().filter(r -> !r.isEliminado())
+            .filter(r -> !conceptosAnuales || !concepto(r) || r.getVigencia() != null)
+            .filter(r -> r.getVigencia() == null ? !propios.contains(r.getCodigo())
             : r.getVigencia().getId().equals(vigenciaId)).toList();
     }
 }

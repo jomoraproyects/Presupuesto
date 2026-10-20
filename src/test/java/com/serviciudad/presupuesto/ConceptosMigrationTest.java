@@ -18,7 +18,7 @@ class ConceptosMigrationTest {
         db.update("INSERT INTO usuario(id,username,password_hash,nombre,rol_id,area_id,created_at,updated_at) SELECT 404,'tecnica','hash-tecnica','Técnica',id,501,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP FROM rol WHERE nombre='RESPONSABLE_AREA'");
         db.update("INSERT INTO necesidad_presupuestal(id,vigencia_id,area_id,rubro_presupuestal_id,descripcion,justificacion,unidad_medida,cantidad_solicitada,valor_unitario_solicitado,valor_total_solicitado,cantidad_solicitada_original,valor_unitario_solicitado_original,valor_total_solicitado_original,cantidad_aprobada,valor_unitario_aprobado,valor_total_aprobado,estado,creado_por_id,aplica_distribucion,created_at,updated_at) VALUES(601,501,501,501,'Escritorios','Histórica','unidad',10,800000,8000000,10,800000,8000000,8,800000,6400000,'APROBADA_CON_AJUSTES',404,FALSE,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)");
         db.update("INSERT INTO historial_necesidad(id,necesidad_id,usuario_id,accion,descripcion,estado_nuevo,valor_solicitado,valor_aprobado_nuevo,detalle_nuevo,fecha) VALUES(701,601,404,'AJUSTE','Histórico','APROBADA_CON_AJUSTES',8000000,6400000,'original',CURRENT_TIMESTAMP)");
-        Flyway migrated = Flyway.configure().dataSource(url, "sa", "").load();
+        Flyway migrated = Flyway.configure().dataSource(url, "sa", "").target("9").load();
         assertThat(migrated.migrate().migrationsExecuted).isEqualTo(3);
         assertThat(db.queryForObject("SELECT COUNT(*) FROM rubro_presupuestal WHERE codigo LIKE 'FORM.CONCEPTO.%'", Integer.class)).isEqualTo(65);
         assertThat(db.queryForObject("SELECT COUNT(*) FROM rubro_presupuestal WHERE nombre='IMPUESTO PREDIAL'", Integer.class)).isEqualTo(2);

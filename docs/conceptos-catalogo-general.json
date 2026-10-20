@@ -1,0 +1,427 @@
+[
+  {
+    "orden": 1,
+    "nombre": "ADECUACIÓN O CONSTRUCCIÓN DE EDIFICACIONES Y TERRENOS",
+    "codigo": "FORM.CONCEPTO.CG.001"
+  },
+  {
+    "orden": 2,
+    "nombre": "COMPRA EQUIPOS Y MAQUINAS DE OFICINA",
+    "codigo": "FORM.CONCEPTO.CG.002"
+  },
+  {
+    "orden": 3,
+    "nombre": "ADQUISICIÓN DE HARDWARE",
+    "codigo": "FORM.CONCEPTO.CG.003"
+  },
+  {
+    "orden": 4,
+    "nombre": "COMPRA MUEBLES Y ENSERES",
+    "codigo": "FORM.CONCEPTO.CG.004"
+  },
+  {
+    "orden": 5,
+    "nombre": "ADQUISICIÓN DE SOFTWARE",
+    "codigo": "FORM.CONCEPTO.CG.005"
+  },
+  {
+    "orden": 6,
+    "nombre": "COMISIONES, HONORARIOS Y SERVICIOS ADMINISTRATIVOS",
+    "codigo": "FORM.CONCEPTO.CG.006"
+  },
+  {
+    "orden": 7,
+    "nombre": "GASTOS DE DESARROLLO DE SOFTWARE",
+    "codigo": "FORM.CONCEPTO.CG.007"
+  },
+  {
+    "orden": 8,
+    "nombre": "SERVICIOS PUBLICOS",
+    "codigo": "FORM.CONCEPTO.CG.008"
+  },
+  {
+    "orden": 9,
+    "nombre": "DOTACIÓN ADMINISTRATIVA",
+    "codigo": "FORM.CONCEPTO.CG.009"
+  },
+  {
+    "orden": 10,
+    "nombre": "ELEMENTOS DE ASEO Y CAFETERIA",
+    "codigo": "FORM.CONCEPTO.CG.010"
+  },
+  {
+    "orden": 11,
+    "nombre": "SEGURIDAD INDUSTRIAL",
+    "codigo": "FORM.CONCEPTO.CG.011"
+  },
+  {
+    "orden": 12,
+    "nombre": "SEGURIDAD INDUSTRIAL ELEMENTOS",
+    "codigo": "FORM.CONCEPTO.CG.012"
+  },
+  {
+    "orden": 13,
+    "nombre": "MATERIALES Y SUMINISTROS",
+    "codigo": "FORM.CONCEPTO.CG.013"
+  },
+  {
+    "orden": 14,
+    "nombre": "ALQUILER DE VEHICULOS",
+    "codigo": "FORM.CONCEPTO.CG.014"
+  },
+  {
+    "orden": 15,
+    "nombre": "SERVICIOS DE CORREO Y TRANSPORTE",
+    "codigo": "FORM.CONCEPTO.CG.015"
+  },
+  {
+    "orden": 16,
+    "nombre": "SERVICIOS DE ASEO, CAFETERIA Y RESTAURANTE",
+    "codigo": "FORM.CONCEPTO.CG.016"
+  },
+  {
+    "orden": 17,
+    "nombre": "ARRENDAMIENTO CONSTRUCCIONES Y EDIFICACIONES",
+    "codigo": "FORM.CONCEPTO.CG.017"
+  },
+  {
+    "orden": 18,
+    "nombre": "SEGUROS ADMINISTRATIVO",
+    "codigo": "FORM.CONCEPTO.CG.018"
+  },
+  {
+    "orden": 19,
+    "nombre": "SERVICIOS DE SISTEMATIZACION",
+    "codigo": "FORM.CONCEPTO.CG.019"
+  },
+  {
+    "orden": 20,
+    "nombre": "MANTENIMIENTO MUEBLES Y EQUIPO DE OFICINA",
+    "codigo": "FORM.CONCEPTO.CG.020"
+  },
+  {
+    "orden": 21,
+    "nombre": "MANTENIMIENTO EDIFICACIONES",
+    "codigo": "FORM.CONCEPTO.CG.021"
+  },
+  {
+    "orden": 22,
+    "nombre": "IMPRESOS Y PUBLICACIONES",
+    "codigo": "FORM.CONCEPTO.CG.022"
+  },
+  {
+    "orden": 23,
+    "nombre": "MARKETING E IMAGEN CORPORATIVA L",
+    "codigo": "FORM.CONCEPTO.CG.023"
+  },
+  {
+    "orden": 24,
+    "nombre": "OPERACIÓN SERVICIO DE VIGILANCIA",
+    "codigo": "FORM.CONCEPTO.CG.024"
+  },
+  {
+    "orden": 25,
+    "nombre": "FOTOCOPIAS",
+    "codigo": "FORM.CONCEPTO.CG.025"
+  },
+  {
+    "orden": 26,
+    "nombre": "GASTOS LEGALIZACIÓN Y AVALUOS",
+    "codigo": "FORM.CONCEPTO.CG.026"
+  },
+  {
+    "orden": 27,
+    "nombre": "PUBLICIDAD Y PROPAGANDA",
+    "codigo": "FORM.CONCEPTO.CG.027"
+  },
+  {
+    "orden": 28,
+    "nombre": "SEGURIDAD INDUSTRIAL",
+    "codigo": "FORM.CONCEPTO.CG.028"
+  },
+  {
+    "orden": 29,
+    "nombre": "RECEPCIONES OFICIALES",
+    "codigo": "FORM.CONCEPTO.CG.029"
+  },
+  {
+    "orden": 30,
+    "nombre": "SENTENCIAS JUDICIALES",
+    "codigo": "FORM.CONCEPTO.CG.030"
+  },
+  {
+    "orden": 31,
+    "nombre": "LAUDOS ARBITRALES",
+    "codigo": "FORM.CONCEPTO.CG.031"
+  },
+  {
+    "orden": 32,
+    "nombre": "IMPUESTO A LA RENTA",
+    "codigo": "FORM.CONCEPTO.CG.032"
+  },
+  {
+    "orden": 33,
+    "nombre": "GRAVAMEN AL MOVIMIENTO FINANCIERO",
+    "codigo": "FORM.CONCEPTO.CG.033"
+  },
+  {
+    "orden": 34,
+    "nombre": "IMPUESTO PREDIAL",
+    "codigo": "FORM.CONCEPTO.CG.034"
+  },
+  {
+    "orden": 35,
+    "nombre": "INDUSTRIA Y COMERCIO",
+    "codigo": "FORM.CONCEPTO.CG.035"
+  },
+  {
+    "orden": 36,
+    "nombre": "TASAS AMBIENTALES",
+    "codigo": "FORM.CONCEPTO.CG.036"
+  },
+  {
+    "orden": 37,
+    "nombre": "CUOTA DE FISCALIZACION Y AUDITAJE",
+    "codigo": "FORM.CONCEPTO.CG.037"
+  },
+  {
+    "orden": 38,
+    "nombre": "CONTRIBUCION A LA SUPERINTENDENCIA DE SERVICIOS PÚBLICOS",
+    "codigo": "FORM.CONCEPTO.CG.038"
+  },
+  {
+    "orden": 39,
+    "nombre": "ESTUDIO SOCIOECONOMICO ACUEDUCTO",
+    "codigo": "FORM.CONCEPTO.CG.039"
+  },
+  {
+    "orden": 40,
+    "nombre": "CONTRIBUCION A LA CRA",
+    "codigo": "FORM.CONCEPTO.CG.040"
+  },
+  {
+    "orden": 41,
+    "nombre": "MULTAS SUPERINTENDENCIA",
+    "codigo": "FORM.CONCEPTO.CG.041"
+  },
+  {
+    "orden": 42,
+    "nombre": "MULTAS JUDICIALES",
+    "codigo": "FORM.CONCEPTO.CG.042"
+  },
+  {
+    "orden": 43,
+    "nombre": "SANCIONES ADMINISTRATIVAS",
+    "codigo": "FORM.CONCEPTO.CG.043"
+  },
+  {
+    "orden": 44,
+    "nombre": "CAPACITACIÓN A LA COMUNIDAD",
+    "codigo": "FORM.CONCEPTO.CG.044"
+  },
+  {
+    "orden": 45,
+    "nombre": "ENERGÍA ELÉCTRICA PLANTA DE BOMBEO",
+    "codigo": "FORM.CONCEPTO.CG.045"
+  },
+  {
+    "orden": 46,
+    "nombre": "COMPRA DE AGUA CRUDA",
+    "codigo": "FORM.CONCEPTO.CG.046"
+  },
+  {
+    "orden": 47,
+    "nombre": "SUMINISTRO DE AGUA EN BLOQUE",
+    "codigo": "FORM.CONCEPTO.CG.047"
+  },
+  {
+    "orden": 48,
+    "nombre": "DOTACIÓN",
+    "codigo": "FORM.CONCEPTO.CG.048"
+  },
+  {
+    "orden": 49,
+    "nombre": "SEGURIDAD INDUSTRIAL OPERATIVA",
+    "codigo": "FORM.CONCEPTO.CG.049"
+  },
+  {
+    "orden": 50,
+    "nombre": "INSUMOS QUÍMICOS",
+    "codigo": "FORM.CONCEPTO.CG.050"
+  },
+  {
+    "orden": 51,
+    "nombre": "COMBUSTIBLES",
+    "codigo": "FORM.CONCEPTO.CG.051"
+  },
+  {
+    "orden": 52,
+    "nombre": "OBLIGACIONES AMBIENTALES ASOCIADAS",
+    "codigo": "FORM.CONCEPTO.CG.052"
+  },
+  {
+    "orden": 53,
+    "nombre": "LUBRICANTES",
+    "codigo": "FORM.CONCEPTO.CG.053"
+  },
+  {
+    "orden": 54,
+    "nombre": "ADQUISICIÓN DE REPUESTOS",
+    "codigo": "FORM.CONCEPTO.CG.054"
+  },
+  {
+    "orden": 55,
+    "nombre": "COMPRA DE MATERIALES PARA OPERACIÓN",
+    "codigo": "FORM.CONCEPTO.CG.055"
+  },
+  {
+    "orden": 56,
+    "nombre": "COMPRA DE VEHICULOS",
+    "codigo": "FORM.CONCEPTO.CG.056"
+  },
+  {
+    "orden": 57,
+    "nombre": "COMPRA DE MAQUINARIA Y EQUIPOS OPERATIVO",
+    "codigo": "FORM.CONCEPTO.CG.057"
+  },
+  {
+    "orden": 58,
+    "nombre": "COMPRA DE TAPAS, CAJAS, MICROMEDIDORES Y OTROS",
+    "codigo": "FORM.CONCEPTO.CG.058"
+  },
+  {
+    "orden": 59,
+    "nombre": "ALQUILER DE VEHÍCULOS OPERATIVOS",
+    "codigo": "FORM.CONCEPTO.CG.059"
+  },
+  {
+    "orden": 60,
+    "nombre": "CAFETERIA Y RESTAURANTE OPERATIVOS",
+    "codigo": "FORM.CONCEPTO.CG.060"
+  },
+  {
+    "orden": 61,
+    "nombre": "SEGURIDAD INDUSTRIAL OPERATIVA",
+    "codigo": "FORM.CONCEPTO.CG.061"
+  },
+  {
+    "orden": 62,
+    "nombre": "TRANSPORTE DE RESIDUOS PELIGROSOS",
+    "codigo": "FORM.CONCEPTO.CG.062"
+  },
+  {
+    "orden": 63,
+    "nombre": "ALQUILER MAQUINARIA Y EQUIPOS",
+    "codigo": "FORM.CONCEPTO.CG.063"
+  },
+  {
+    "orden": 64,
+    "nombre": "SEGUROS OPERATIVO",
+    "codigo": "FORM.CONCEPTO.CG.064"
+  },
+  {
+    "orden": 65,
+    "nombre": "SEGURO OBLIGATORIO DE VEHÍCULOS",
+    "codigo": "FORM.CONCEPTO.CG.065"
+  },
+  {
+    "orden": 66,
+    "nombre": "ARRENDAMIENTO PLANTA",
+    "codigo": "FORM.CONCEPTO.CG.066"
+  },
+  {
+    "orden": 67,
+    "nombre": "ARRENDAMIENTO MAQUINARIA-PLANTA",
+    "codigo": "FORM.CONCEPTO.CG.067"
+  },
+  {
+    "orden": 68,
+    "nombre": "GASTOS FINANCIEROS OPERATIVOS",
+    "codigo": "FORM.CONCEPTO.CG.068"
+  },
+  {
+    "orden": 69,
+    "nombre": "COMISIONES,HONORARIOS Y SERVICIOS",
+    "codigo": "FORM.CONCEPTO.CG.069"
+  },
+  {
+    "orden": 70,
+    "nombre": "MANTENIMIENTO MAQUINARIA - EQUIPOS",
+    "codigo": "FORM.CONCEPTO.CG.070"
+  },
+  {
+    "orden": 71,
+    "nombre": "MONTAJE DE LLANTAS",
+    "codigo": "FORM.CONCEPTO.CG.071"
+  },
+  {
+    "orden": 72,
+    "nombre": "OPERACIÓN SERVICIOS DE VIGILANCIA DE LA PLANTA DE TRATAMIENTO",
+    "codigo": "FORM.CONCEPTO.CG.072"
+  },
+  {
+    "orden": 73,
+    "nombre": "ANÁLISIS DE LABORATORIO",
+    "codigo": "FORM.CONCEPTO.CG.073"
+  },
+  {
+    "orden": 74,
+    "nombre": "MANTENIMIENTO PLANTA DE TRATAMIENTO",
+    "codigo": "FORM.CONCEPTO.CG.074"
+  },
+  {
+    "orden": 75,
+    "nombre": "OPERACION SERVICIO DE VIGILANCIA OPERATIVA",
+    "codigo": "FORM.CONCEPTO.CG.075"
+  },
+  {
+    "orden": 76,
+    "nombre": "ANALISIS Y MANEJO DE LODOS PLANTA DE TRATAMIENTO",
+    "codigo": "FORM.CONCEPTO.CG.076"
+  },
+  {
+    "orden": 77,
+    "nombre": "OBLIGACIONES AMBIENTALES OPERATIVAS",
+    "codigo": "FORM.CONCEPTO.CG.077"
+  },
+  {
+    "orden": 78,
+    "nombre": "IMPUESTO PREDIAL OPERATIVO",
+    "codigo": "FORM.CONCEPTO.CG.078"
+  },
+  {
+    "orden": 79,
+    "nombre": "IMPUESTO DE VEHICULOS OPERATIVO",
+    "codigo": "FORM.CONCEPTO.CG.079"
+  },
+  {
+    "orden": 80,
+    "nombre": "OTROS IMPUESTOS OPERATIVOS",
+    "codigo": "FORM.CONCEPTO.CG.080"
+  },
+  {
+    "orden": 81,
+    "nombre": "CONCILIACIONES Y SENTENCIAS JUDICIALES",
+    "codigo": "FORM.CONCEPTO.CG.081"
+  },
+  {
+    "orden": 81,
+    "nombre": "ANALISIS FISICO QUIMICO, BACTERIOLOGICOS",
+    "codigo": "FORM.CONCEPTO.CG.082"
+  },
+  {
+    "orden": 82,
+    "nombre": "TASA POR USO DEL AGUA",
+    "codigo": "FORM.CONCEPTO.CG.083"
+  },
+  {
+    "orden": 83,
+    "nombre": "DISPOSICIÓN FINAL LODOS ALCANTARILLADO",
+    "codigo": "FORM.CONCEPTO.CG.084"
+  },
+  {
+    "orden": 84,
+    "nombre": "DISPOSICIÓN FINAL ASEO",
+    "codigo": "FORM.CONCEPTO.CG.085"
+  }
+]

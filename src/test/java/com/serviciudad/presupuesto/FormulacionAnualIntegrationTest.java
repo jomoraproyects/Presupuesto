@@ -267,7 +267,7 @@ class FormulacionAnualIntegrationTest {
         long next = req(post("/api/vigencias/" + vigencia + "/copiar-configuracion"), budget,
             Map.of("vigencia", year(2028), "copiarParticipantes", true), 201).path("id").asLong();
         JsonNode tree = req(get("/api/rubros/arbol?vigenciaId=" + next), owner, null, 200);
-        assertThat(tree.size()).isEqualTo(67); assertThat(tree.get(0).path("id").asLong()).isNotEqualTo(root);
+        assertThat(tree.size()).isEqualTo(87); assertThat(tree.get(0).path("id").asLong()).isNotEqualTo(root);
         assertThat(tree.get(0).path("hijos").get(0).path("id").asLong()).isNotEqualTo(category);
         JsonNode maps = req(get("/api/vigencias/" + next + "/mapeos"), budget, null, 200);
         assertThat(maps.size()).isEqualTo(1); assertThat(maps.get(0).path("rubroOrigenId").asLong()).isNotEqualTo(category);
@@ -297,16 +297,16 @@ class FormulacionAnualIntegrationTest {
         long next = req(post("/api/vigencias/" + vigencia + "/copiar-configuracion"), budget,
             Map.of("vigencia", year(2028), "copiarParticipantes", true), 201).path("id").asLong();
         JsonNode form = req(get("/api/formulacion/vigencias/" + next), owner, null, 200);
-        assertThat(form.path("rubros").size()).isEqualTo(67);
+        assertThat(form.path("rubros").size()).isEqualTo(87);
         amount(form, "solicitado", "0");
         JsonNode master = req(get("/api/presupuesto/vigencias/" + next + "/maestro"), budget, null, 200);
-        assertThat(master.path("rubros").size()).isEqualTo(67);
+        assertThat(master.path("rubros").size()).isEqualTo(87);
         amount(master, "totalSolicitado", "0");
         original.put("vigenciaId", next);
         req(post("/api/necesidades"), owner, original, 409);
         long yearAfter = req(post("/api/vigencias/" + next + "/copiar-configuracion"), budget,
             Map.of("vigencia", year(2029), "copiarParticipantes", true), 201).path("id").asLong();
-        assertThat(req(get("/api/formulacion/vigencias/" + yearAfter), owner, null, 200).path("rubros").size()).isEqualTo(67);
+        assertThat(req(get("/api/formulacion/vigencias/" + yearAfter), owner, null, 200).path("rubros").size()).isEqualTo(87);
         JsonNode maps = req(get("/api/vigencias/" + yearAfter + "/mapeos"), budget, null, 200);
         assertThat(maps.size()).isEqualTo(1);
         assertThat(maps.get(0).path("rubroOrigenId").asLong()).isNotEqualTo(globalCategory);
@@ -331,17 +331,18 @@ class FormulacionAnualIntegrationTest {
         participant(area, true);
         req(put("/api/areas/" + area), admin, Map.of("codigo", "TEC-TEST", "nombre", "Técnica"), 200);
         JsonNode catalog = req(get("/api/rubros/conceptos?vigenciaId=" + vigencia), owner, null, 200);
-        JsonNode reference = json.readTree(java.nio.file.Files.readString(java.nio.file.Path.of("docs/conceptos-formulario.json")));
-        assertThat(catalog.size()).isEqualTo(65);
+        JsonNode reference = json.readTree(java.nio.file.Files.readString(java.nio.file.Path.of("docs/conceptos-catalogo-general.json")));
+        assertThat(catalog.size()).isEqualTo(85);
         Set<Long> ids = new HashSet<>();
-        for (int i=0; i<65; i++) {
+        for (int i=0; i<85; i++) {
             assertThat(catalog.get(i).path("nombre").asText()).isEqualTo(reference.get(i).path("nombre").asText());
-            assertThat(catalog.get(i).path("orden").asInt()).isEqualTo(i+1);
+            assertThat(catalog.get(i).path("orden").asInt()).isEqualTo(reference.get(i).path("orden").asInt());
             assertThat(ids.add(catalog.get(i).path("id").asLong())).isTrue();
         }
-        assertThat(catalog.get(8).path("nombre")).isEqualTo(catalog.get(10).path("nombre"));
-        assertThat(catalog.get(22).path("nombre")).isEqualTo(catalog.get(52).path("nombre"));
-        assertThat(catalog.get(31).path("nombre")).isEqualTo(catalog.get(54).path("nombre"));
+        assertThat(catalog.get(10).path("nombre")).isEqualTo(catalog.get(27).path("nombre"));
+        assertThat(catalog.get(48).path("nombre")).isEqualTo(catalog.get(60).path("nombre"));
+        assertThat(catalog.get(80).path("orden").asInt()).isEqualTo(81);
+        assertThat(catalog.get(81).path("orden").asInt()).isEqualTo(81);
         category = catalog.get(5).path("id").asLong();
         Map<String,Object> architect = need("Arquitecto", 12, 5000000, List.of(), false);
         architect.remove("justificacion"); architect.remove("aplicaDistribucion"); architect.put("unidadMedida", "MES");
@@ -424,7 +425,7 @@ class FormulacionAnualIntegrationTest {
             Map.of("confirmacion", "BORRAR TODOS LOS PRESUPUESTOS"), 204);
         assertThat(req(get("/api/vigencias"), admin, null, 200).size()).isZero();
         assertThat(req(get("/api/areas"), admin, null, 200).size()).isPositive();
-        assertThat(req(get("/api/rubros/conceptos"), admin, null, 200).size()).isGreaterThanOrEqualTo(65);
+        assertThat(req(get("/api/rubros/conceptos"), admin, null, 200).size()).isGreaterThanOrEqualTo(85);
     }
 
     @Test void administradorGestionaConceptosSinFusionarNombresNiBorrarHistoricos() throws Exception {
@@ -462,7 +463,7 @@ class FormulacionAnualIntegrationTest {
         JsonNode historical = null;
         for (JsonNode block : form.path("rubros")) if (block.path("rubroId").asLong() == category) historical = block;
         assertThat(historical).isNotNull(); assertThat(historical.path("habilitado").asBoolean()).isFalse();
-        assertThat(historical.path("nombre").asText()).isEqualTo("Nombre actualizado");
+        assertThat(historical.path("nombre").asText()).isEqualTo("NOMBRE ACTUALIZADO");
         assertThat(historical.path("orden").asInt()).isEqualTo(2);
         req(get("/api/necesidades/" + id + "/historial"), owner, null, 200);
         req(post("/api/necesidades"), owner, need("No permitido", 1, 100, List.of(), false), 409);
@@ -569,8 +570,8 @@ class FormulacionAnualIntegrationTest {
         vigencia = created.path("id").asLong();
         assertThat(created.path("estado").asText()).isEqualTo("BORRADOR");
         JsonNode concepts = req(get("/api/rubros/conceptos?vigenciaId=" + vigencia), admin, null, 200);
-        assertThat(concepts.size()).isEqualTo(65);
-        for (JsonNode c : concepts) if (c.path("codigo").asText().equals("FORM.CONCEPTO.007")) category = c.path("id").asLong();
+        assertThat(concepts.size()).isEqualTo(85);
+        for (JsonNode c : concepts) if (c.path("nombre").asText().equals("MATERIALES Y SUMINISTROS")) category = c.path("id").asLong();
         assertThat(category).isPositive();
         req(post("/api/rubros/conceptos"), admin, Map.of("nombre", "EQUIPOS ESPECIALIZADOS", "orden", 66,
             "vigenciaId", vigencia), 201);
@@ -645,6 +646,84 @@ class FormulacionAnualIntegrationTest {
         assertThat(approved.path("estado").asText()).isEqualTo("APROBADO");
     }
 
+    @Test void eliminarAnioConservaConceptosPersonalizadosYPermiteRecrearPresupuesto() throws Exception {
+        JsonNode custom = req(post("/api/rubros/conceptos"), admin,
+            Map.of("nombre", "Equipos especializados", "orden", 85, "vigenciaId", vigencia), 201);
+        String code = custom.path("codigo").asText();
+        req(put("/api/rubros/conceptos/" + custom.path("id").asLong()), admin,
+            Map.of("nombre", "Equipos especializados actualizados", "orden", 86), 200);
+        req(delete("/api/vigencias/" + vigencia), admin, Map.of("confirmacion", "ELIMINAR 2027"), 204);
+        JsonNode catalog = req(get("/api/rubros/conceptos"), admin, null, 200);
+        assertThat(catalog.size()).isEqualTo(86);
+        assertThat(conceptByCode(catalog, code).path("nombre").asText()).isEqualTo("EQUIPOS ESPECIALIZADOS ACTUALIZADOS");
+        vigencia = req(post("/api/vigencias/presupuestos"), admin, Map.of("anio", 2027), 201).path("id").asLong();
+        JsonNode recreated = req(get("/api/rubros/conceptos?vigenciaId=" + vigencia), admin, null, 200);
+        assertThat(recreated.size()).isEqualTo(86);
+        assertThat(conceptByCode(recreated, code).path("orden").asInt()).isEqualTo(86);
+        req(delete("/api/vigencias/presupuestos"), admin,
+            Map.of("confirmacion", "BORRAR TODOS LOS PRESUPUESTOS"), 204);
+        assertThat(req(get("/api/vigencias"), admin, null, 200).isEmpty()).isTrue();
+        assertThat(req(get("/api/rubros/conceptos"), admin, null, 200).size()).isEqualTo(86);
+        long next = req(post("/api/vigencias/presupuestos"), admin, Map.of("anio", 2028), 201).path("id").asLong();
+        assertThat(req(get("/api/rubros/conceptos?vigenciaId=" + next), admin, null, 200).size()).isEqualTo(86);
+    }
+
+    @Test void soloSuperAdminEliminaConceptoDesactivadoSinPerderHistoricoNiReaparecer() throws Exception {
+        participant(area, true);
+        JsonNode custom = req(post("/api/rubros/conceptos"), admin,
+            Map.of("nombre", "Concepto a eliminar", "orden", 90, "vigenciaId", vigencia), 201);
+        category = custom.path("id").asLong();
+        String code = custom.path("codigo").asText();
+        long item = create("Ítem conservado", 2, 100, List.of(), false);
+        req(post("/api/formulacion/vigencias/" + vigencia + "/enviar"), owner, null, 200);
+        req(put("/api/necesidades/" + item + "/aprobado"), admin, Map.of("cantidadAprobada", 1), 200);
+        String snapshot = envios.findByVigenciaIdAndAreaId(vigencia, area).orElseThrow().getDatosEnviados();
+        req(delete("/api/rubros/conceptos/" + category), owner, null, 403);
+        req(delete("/api/rubros/conceptos/" + category), admin, null, 409);
+        req(patch("/api/rubros/conceptos/" + category + "/estado"), admin, Map.of("activo", false), 200);
+        req(delete("/api/rubros/conceptos/" + category), admin, null, 204);
+        for (JsonNode c : req(get("/api/rubros/conceptos"), admin, null, 200))
+            assertThat(c.path("codigo").asText()).isNotEqualTo(code);
+        for (JsonNode c : req(get("/api/rubros/conceptos?vigenciaId=" + vigencia), admin, null, 200))
+            assertThat(c.path("codigo").asText()).isNotEqualTo(code);
+        JsonNode original = req(get("/api/necesidades/" + item), owner, null, 200);
+        amount(original, "valorTotalSolicitado", "200"); amount(original, "valorTotalAprobado", "100");
+        JsonNode form = req(get("/api/formulacion/vigencias/" + vigencia), owner, null, 200);
+        assertThat(find(form.path("rubros"), category).path("habilitado").asBoolean()).isFalse();
+        amount(req(get(base() + "/resumen"), admin, null, 200), "totalSolicitado", "200");
+        amount(req(get(base() + "/resumen"), admin, null, 200), "totalAprobado", "100");
+        assertThat(envios.findByVigenciaIdAndAreaId(vigencia, area).orElseThrow().getDatosEnviados()).isEqualTo(snapshot);
+        req(delete("/api/vigencias/" + vigencia), admin, Map.of("confirmacion", "ELIMINAR 2027"), 204);
+        long next = req(post("/api/vigencias/presupuestos"), admin, Map.of("anio", 2027), 201).path("id").asLong();
+        assertThat(req(get("/api/rubros/conceptos?vigenciaId=" + next), admin, null, 200).size()).isEqualTo(85);
+    }
+
+    private JsonNode conceptByCode(JsonNode nodes, String code) {
+        for (JsonNode node : nodes) if (node.path("codigo").asText().equals(code)) return node;
+        throw new AssertionError("Concepto no encontrado: " + code);
+    }
+    @Test void eliminarAnioProtegeTambienConceptoAnteriorQueAunNoTienePlantillaGeneral() throws Exception {
+        long legacy = rubro("FORM.CONCEPTO.ANTERIOR-SIN-BASE", "PERSONALIZADO ANTERIOR", null, true, true);
+        req(delete("/api/vigencias/" + vigencia), admin, Map.of("confirmacion", "ELIMINAR 2027"), 204);
+        JsonNode restored = conceptByCode(req(get("/api/rubros/conceptos"), admin, null, 200), "FORM.CONCEPTO.ANTERIOR-SIN-BASE");
+        assertThat(restored.path("id").asLong()).isEqualTo(legacy);
+        assertThat(restored.path("vigenciaId").isNull()).isTrue();
+        assertThat(restored.path("nombre").asText()).isEqualTo("PERSONALIZADO ANTERIOR");
+    }
+
+    @Test void editarCatalogoGeneralSoloCambiaCopiasDeNuevosAnios() throws Exception {
+        long firstYear = req(post("/api/vigencias/presupuestos"), admin, Map.of("anio", 2028), 201).path("id").asLong();
+        JsonNode global = req(get("/api/rubros/conceptos"), admin, null, 200).get(0);
+        req(put("/api/rubros/conceptos/" + global.path("id").asLong()), admin,
+            Map.of("nombre", "Nombre nuevo del catálogo", "orden", 90), 200);
+        JsonNode snapshot = conceptByCode(req(get("/api/rubros/conceptos?vigenciaId=" + firstYear), admin, null, 200), global.path("codigo").asText());
+        assertThat(snapshot.path("nombre")).isEqualTo(global.path("nombre"));
+        assertThat(snapshot.path("orden")).isEqualTo(global.path("orden"));
+        long nextYear = req(post("/api/vigencias/presupuestos"), admin, Map.of("anio", 2029), 201).path("id").asLong();
+        JsonNode future = conceptByCode(req(get("/api/rubros/conceptos?vigenciaId=" + nextYear), admin, null, 200), global.path("codigo").asText());
+        assertThat(future.path("nombre").asText()).isEqualTo("NOMBRE NUEVO DEL CATÁLOGO");
+        assertThat(future.path("orden").asInt()).isEqualTo(90);
+    }
     private String base() { return "/api/presupuesto/vigencias/" + vigencia; }
     private void participant(long areaId, boolean enabled) throws Exception { req(put("/api/vigencias/" + vigencia + "/participantes/" + areaId), admin, Map.of("activo", enabled), 200); }
     private long create(String name, int quantity, int unit, List<Map<String, Object>> distribution, boolean applies) throws Exception {

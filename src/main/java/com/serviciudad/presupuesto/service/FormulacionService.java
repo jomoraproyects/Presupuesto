@@ -123,7 +123,7 @@ public class FormulacionService {
             BigDecimal requested = children.stream().map(NecesidadResponse::valorTotalSolicitado).reduce(BigDecimal.ZERO.setScale(2), BigDecimal::add);
             BigDecimal approved = children.stream().map(n -> n.valorTotalAprobado() == null ? BigDecimal.ZERO : n.valorTotalAprobado())
                 .reduce(BigDecimal.ZERO.setScale(2), BigDecimal::add);
-            boolean enabled = !RubrosAnuales.plantillaAnterior(category) && category.isActivo() && category.isPermiteMovimiento() && category.isCategoriaFormulacion() && !parents.contains(category.getId())
+            boolean enabled = !category.isEliminado() && !RubrosAnuales.plantillaAnterior(category) && category.isActivo() && category.isPermiteMovimiento() && category.isCategoriaFormulacion() && !parents.contains(category.getId())
                 && (category.getVigencia() != null || !scopedCodes.contains(category.getCodigo()));
             result.add(new FormulacionRubroResponse(category.getId(), category.getCodigo(), category.getNombre(), enabled,
                 requested, approved, approved.subtract(requested), children.size(), children, category.getOrden()));

@@ -27,6 +27,7 @@ public class EliminacionPresupuestoService {
         if (!("ELIMINAR " + vigencia.getAnio()).equals(confirmacion))
             throw new BusinessException("Escriba ELIMINAR " + vigencia.getAnio() + " para confirmar");
         entities.flush();
+        conservarConceptos(id);
         jdbc.update("DELETE FROM historial_necesidad WHERE necesidad_id IN (SELECT id FROM necesidad_presupuestal WHERE vigencia_id = ?)", id);
         jdbc.update("DELETE FROM distribucion_necesidad WHERE necesidad_id IN (SELECT id FROM necesidad_presupuestal WHERE vigencia_id = ?)", id);
         jdbc.update("DELETE FROM necesidad_presupuestal WHERE vigencia_id = ?", id);
@@ -43,8 +44,9 @@ public class EliminacionPresupuestoService {
         if (!"BORRAR TODOS LOS PRESUPUESTOS".equals(confirmacion))
             throw new BusinessException("Escriba BORRAR TODOS LOS PRESUPUESTOS para confirmar");
         entities.flush();
-        List<Long> ids = jdbc.queryForList("SELECT id FROM vigencia", Long.class);
+        List<Long> ids = jdbc.queryForList("SELECT id FROM vigencia ORDER BY anio DESC", Long.class);
         if (ids.isEmpty()) return;
+        ids.forEach(this::conservarConceptos);
         jdbc.update("DELETE FROM historial_necesidad");
         jdbc.update("DELETE FROM distribucion_necesidad");
         jdbc.update("DELETE FROM necesidad_presupuestal");
@@ -54,5 +56,15 @@ public class EliminacionPresupuestoService {
         jdbc.update("DELETE FROM rubro_presupuestal WHERE vigencia_id IS NOT NULL");
         jdbc.update("DELETE FROM vigencia");
         entities.clear();
+    }
+
+    private void conservarConceptos(Long vigenciaId) {
+        var conceptos = jdbc.queryForList("SELECT id, codigo FROM rubro_presupuestal WHERE vigencia_id = ? AND codigo LIKE 'FORM.CONCEPTO.%' AND eliminado = FALSE ORDER BY id", vigenciaId);
+        for (var concepto : conceptos) {
+            Integer bases = jdbc.queryForObject("SELECT COUNT(*) FROM rubro_presupuestal WHERE vigencia_id IS NULL AND codigo = ?", Integer.class, concepto.get("codigo"));
+            if (bases != null && bases == 0) {
+                jdbc.update("UPDATE rubro_presupuestal SET vigencia_id = NULL, rubro_padre_id = NULL, nivel = 0 WHERE id = ?", concepto.get("id"));
+            }
+        }
     }
 }

@@ -24,6 +24,7 @@ export const rubrosService = {
 }
 export const conceptosService = {
   ...catalog<Rubro, ConceptoInput>('/rubros/conceptos'),
+  async remove(id: number): Promise<void> { await client.delete(`/rubros/conceptos/${id}`) },
   async list(vigenciaId?: number | null): Promise<Rubro[]> {
     return (await client.get<Rubro[]>('/rubros/conceptos', { params: vigenciaId ? { vigenciaId } : {} })).data
   },

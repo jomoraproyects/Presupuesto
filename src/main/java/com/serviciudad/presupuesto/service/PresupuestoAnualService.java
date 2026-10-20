@@ -26,12 +26,9 @@ public class PresupuestoAnualService {
     }
 
     public VigenciaResponse crear(int anio) {
-        Vigencia anterior = vigencias.findAll().stream().filter(v -> v.getAnio() < anio)
-            .max(Comparator.comparingInt(Vigencia::getAnio)).orElse(null);
         List<RubroPresupuestal> catalogo = rubros.findAllByOrderByOrdenAscIdAsc();
-        List<RubroPresupuestal> base = (anterior == null ? catalogo : RubrosAnuales.efectivos(catalogo, anterior.getId()))
-            .stream().filter(RubrosAnuales::concepto).filter(r -> r.getVigencia() == null || anterior != null
-                && r.getVigencia().getId().equals(anterior.getId())).toList();
+        List<RubroPresupuestal> base = catalogo.stream().filter(RubrosAnuales::concepto)
+            .filter(r -> r.getVigencia() == null && !r.isEliminado()).toList();
         VigenciaResponse created = vigenciaService.create(new VigenciaRequest(anio, "Presupuesto " + anio,
             LocalDate.of(anio, 1, 1), LocalDate.of(anio, 12, 31), BigDecimal.ZERO, EstadoVigencia.BORRADOR));
         Vigencia target = vigencias.findById(created.id()).orElseThrow();

@@ -27,6 +27,8 @@ public class RubroPresupuestal extends Auditable {
     private boolean categoriaFormulacion = true;
     @Column(nullable = false)
     private boolean activo = true;
+    @Column(nullable = false)
+    private boolean eliminado;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "vigencia_id")
     private Vigencia vigencia;
