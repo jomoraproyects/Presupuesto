@@ -42,7 +42,8 @@ public class SecurityConfig {
     SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtFilter, ObjectMapper mapper) throws Exception {
         return http.csrf(csrf -> csrf.disable()).cors(Customizer.withDefaults())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth.requestMatchers("/api/auth/login").permitAll().anyRequest().authenticated())
+            .authorizeHttpRequests(auth -> auth.requestMatchers("/api/auth/login").permitAll()
+                .requestMatchers("/api/**").authenticated().anyRequest().permitAll())
             .exceptionHandling(errors -> errors
                 .authenticationEntryPoint((request, response, ex) -> writeError(response, mapper, 401, "UNAUTHORIZED", "Autenticación requerida", request.getRequestURI()))
                 .accessDeniedHandler((request, response, ex) -> writeError(response, mapper, 403, "FORBIDDEN", "Acceso denegado", request.getRequestURI())))

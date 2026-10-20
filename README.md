@@ -2,7 +2,7 @@
 
 Monolito Spring Boot con frontend React para formular y aprobar el presupuesto anual. Se conservan la autenticación, áreas, vigencias, conceptos, ítems, historial y consolidados existentes.
 
-Para instalarlo en la VM Ubuntu de la empresa con una base MySQL nueva, consulte [la guía de despliegue](deploy/INSTALACION_UBUNTU.md).
+Para instalarlo en la carpeta `~/Escritorio/presupuesto` de la VM Ubuntu, con una base MySQL nueva y sin modificar Selección, consulte [la guía de despliegue](deploy/INSTALACION_UBUNTU.md). En ese modo Spring Boot sirve tanto el frontend compilado como `/api`.
 
 ## Flujo actual
 

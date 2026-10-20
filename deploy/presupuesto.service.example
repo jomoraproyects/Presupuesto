@@ -9,7 +9,7 @@ User=serviciudad
 Group=serviciudad
 WorkingDirectory=/home/serviciudad/Escritorio/presupuesto
 EnvironmentFile=/home/serviciudad/Escritorio/presupuesto/.env.production
-ExecStart=/usr/bin/java -jar /home/serviciudad/Escritorio/presupuesto/target/presupuesto-0.1.0-SNAPSHOT.jar --server.address=127.0.0.1
+ExecStart=/usr/bin/java -jar /home/serviciudad/Escritorio/presupuesto/target/presupuesto-0.1.0-SNAPSHOT.jar
 Restart=on-failure
 RestartSec=5
 SuccessExitStatus=143

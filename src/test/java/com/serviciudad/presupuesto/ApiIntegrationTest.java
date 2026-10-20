@@ -51,6 +51,9 @@ class ApiIntegrationTest {
         assertThat(usuarios.findByUsername("admin_prueba")).isPresent();
         assertThat(usuarios.findByUsername("admin_prueba").orElseThrow().getPasswordHash()).isNotEqualTo(ADMIN_PASSWORD);
 
+        mvc.perform(get("/login")).andExpect(status().isOk()).andExpect(forwardedUrl("/index.html"));
+        mvc.perform(get("/presupuesto-general")).andExpect(status().isOk()).andExpect(forwardedUrl("/index.html"));
+
         mvc.perform(get("/api/areas")).andExpect(status().isUnauthorized());
         mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
             .content("{\"username\":\"admin_prueba\",\"password\":\"incorrecta\"}"))

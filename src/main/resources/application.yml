@@ -1,6 +1,9 @@
 spring:
   application:
     name: presupuesto
+  web:
+    resources:
+      static-locations: ${FRONTEND_STATIC_LOCATION:classpath:/static/}
   datasource:
     url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:presupuesto}?useUnicode=true&characterEncoding=utf8
     username: ${DB_USERNAME}
@@ -15,6 +18,7 @@ spring:
   flyway:
     enabled: true
 server:
+  address: ${SERVER_ADDRESS:0.0.0.0}
   port: ${SERVER_PORT:8080}
 app:
   cors:

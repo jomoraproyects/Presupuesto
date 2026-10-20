@@ -1,37 +1,39 @@
-# Presupuesto en la VM Ubuntu de Serviciudad
+# Presupuesto en el escritorio de la VM Ubuntu
 
-Este aplicativo se instala de manera independiente de `seleccion`: otro repositorio,
-otro servicio systemd, otra base MySQL y otro sitio web. El codigo y el frontend
-compilado quedan en `/home/serviciudad/Escritorio/presupuesto`. El archivo de
-configuracion privada `.env.production` tambien queda ahi, excluido de Git.
-MySQL administra sus archivos de datos fuera de la carpeta del proyecto.
+Presupuesto se instala en `/home/serviciudad/Escritorio/presupuesto`, sin tocar
+el proyecto `seleccion` ni sus archivos de Apache. Spring Boot sirve la API y el
+frontend compilado desde esa misma carpeta por el puerto 8081. Usa una base
+MySQL nueva llamada `presupuesto`; MySQL administra sus propios archivos de
+datos fuera de la carpeta del proyecto. El archivo de arranque de systemd
+tambien debe quedar en `/etc/systemd/system`, como requiere Ubuntu.
 
-## Datos por confirmar antes de ejecutar
+Direccion inicial para pruebas en la red interna:
+`http://192.168.100.251:8081/login`. Antes de usar datos reales, configurar
+HTTPS en el puerto propio de Presupuesto, sin modificar Seleccion.
 
-- Acceso SSH a `serviciudad@192.168.100.251` (ahora el servicio SSH esta inactivo).
-- Que los puertos 8081 y 8443 esten disponibles.
-- Ubicacion y validez del certificado HTTPS de `seleccion` para 192.168.100.251.
-- Estado y version de MySQL y destino externo para respaldos.
+## Estado comprobado de la VM
 
-La ruta y el usuario ya estan confirmados. `seleccion` usa la IP
-192.168.100.251 en los puertos 80 y 443. Presupuesto usara el puerto 8443
-de Apache, con una URL independiente, si el certificado cubre esa IP.
+- Usuario `serviciudad`, IP `192.168.100.251`, Escritorio existente.
+- MySQL activo; Apache y Seleccion activos en 80/443; no se modificaran.
+- SSH inactivo; se necesita para administrar esta VM desde otro PC.
+- Java ausente; se requiere JDK 21.
+- Node 18.19.1; Vite necesita Node 20.19+ o 22.12+. Instalar un Node mas
+  reciente solo para `serviciudad`, sin reemplazar el Node global.
 
 ## Instalacion inicial
 
-1. Instalar Java 21 y Node compatible con Vite (20.19+ o 22.12+). En la VM se
-   encontro MySQL activo, Java ausente, Node 18.19.1 y SSH inactivo. Apache
-   ocupa 80/443 y sirve `seleccion`; Nginx esta inactivo. Revisar primero los
-   sitios Apache existentes; no activar Nginx ni cambiar Node global.
-2. Clonar el repositorio como el usuario que ejecutara el servicio:
+1. Habilitar SSH y acceso por clave publica. Confirmar que se puede entrar como
+   `serviciudad@192.168.100.251` antes de seguir.
+2. Comprobar que 8081 este libre, espacio en disco y acceso a Internet para
+   Maven y npm. Instalar JDK 21 y Node compatible para el usuario `serviciudad`.
+3. Clonar el codigo en la carpeta elegida:
 
    ```bash
    git clone --branch codex/fase-3-frontend https://github.com/jomoraproyects/Presupuesto.git /home/serviciudad/Escritorio/presupuesto
    ```
 
-   La rama actual publicada es `codex/fase-3-frontend`; `main` aun tiene la
-   version inicial. Al integrar la rama, cambiar el seguimiento a `main`.
-3. Crear **solo** la base nueva en MySQL y su usuario; no modificar `seleccion`:
+   Esta es la rama publicada actualmente; `main` aun no contiene estos cambios.
+4. En MySQL crear **solo** la base y el usuario de Presupuesto:
 
    ```sql
    CREATE DATABASE presupuesto CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
@@ -39,23 +41,25 @@ de Apache, con una URL independiente, si el certificado cubre esa IP.
    GRANT ALL PRIVILEGES ON presupuesto.* TO 'presupuesto_app'@'localhost';
    ```
 
-   Flyway necesita permisos de estructura para las migraciones. En la primera
-   ejecucion crea las tablas y carga los catalogos; no importa los datos H2 del PC.
-4. Copiar `deploy/presupuesto.env.example` a `.env.production` en la raiz del
-   proyecto, completar sus secretos y restringirlo con `chmod 600`. Este archivo
-   esta excluido de Git. `ADMIN_PASSWORD` requiere 12 o mas
-   caracteres y solo crea `admin` si aun no existe. No guardar claves en el repo.
-5. Compilar desde el directorio del repositorio:
+   Flyway necesita estos permisos para crear las tablas y los catalogos al
+   primer arranque. La base H2 del PC Windows no se traslada automaticamente.
+5. Copiar `deploy/presupuesto.env.example` como `.env.production` dentro del
+   proyecto. Completar valores y ejecutar `chmod 600 .env.production`. Git
+   ignora este archivo. `ADMIN_PASSWORD` necesita 12 caracteres o mas y solo
+   crea el usuario inicial cuando la base esta vacia.
+6. Compilar backend y frontend desde la carpeta del proyecto:
 
    ```bash
    ./mvnw clean verify
-   cd frontend && npm ci && npm run build
+   cd frontend
+   npm ci
+   npm run build
    ```
 
-   No definir `VITE_API_URL` con `localhost`: el frontend debe llamar a `/api`
-   bajo el mismo dominio. `frontend/.env.example` ya usa esa ruta.
-6. Instalar `deploy/presupuesto.service.example` como
-   `/etc/systemd/system/presupuesto.service` y activar:
+   `frontend/dist` queda dentro de `presupuesto`. El backend lo sirve usando
+   `FRONTEND_STATIC_LOCATION`. El frontend usa `/api` del mismo origen.
+7. Instalar `deploy/presupuesto.service.example` como
+   `/etc/systemd/system/presupuesto.service`, sin tocar el servicio `seleccion`:
 
    ```bash
    sudo systemctl daemon-reload
@@ -64,55 +68,32 @@ de Apache, con una URL independiente, si el certificado cubre esa IP.
    sudo journalctl -u presupuesto -n 100 --no-pager
    ```
 
-   El backend escucha solo en `127.0.0.1:8081`; no publicar ese puerto en la red.
-7. Ajustar el sitio de ejemplo de Apache al certificado existente. Agregar
-   `Listen 8443` una sola vez a la configuracion de puertos de Apache y permitir
-   el puerto 8443 solo desde la red interna. La ruta
-   `/api/` va al backend; el resto sirve `frontend/dist` directamente desde la
-   carpeta del proyecto. Dar al usuario `www-data` permiso de atravesar las
-   carpetas superiores y leer `dist`, sin abrir el resto del hogar:
-
-   ```bash
-   sudo setfacl -m u:www-data:--x /home/serviciudad /home/serviciudad/Escritorio /home/serviciudad/Escritorio/presupuesto /home/serviciudad/Escritorio/presupuesto/frontend
-   sudo setfacl -R -m u:www-data:rX /home/serviciudad/Escritorio/presupuesto/frontend/dist
-   sudo setfacl -d -m u:www-data:rX /home/serviciudad/Escritorio/presupuesto/frontend/dist
-   ```
-
-   Si `setfacl` no existe, instalar el paquete `acl`. Antes de recargar Apache,
-   ejecutar `sudo apache2ctl configtest`. No modificar el sitio de `seleccion`.
-8. Entrar por HTTPS, crear los usuarios de cada area desde SUPER_ADMIN y probar
-   el flujo de presupuesto. Revisar `systemctl status presupuesto mysql apache2`.
+8. Permitir TCP 8081 **solo desde la red interna** si el firewall esta activo.
+   Probar `/login`, iniciar sesion y crear los usuarios de las areas desde
+   SUPER_ADMIN. No abrir el puerto 3306 de MySQL a la red.
 
 ## Actualizaciones desde GitHub
 
 1. En Windows: probar, hacer commit y push a la rama desplegada.
-2. En Ubuntu: hacer respaldo de la base `presupuesto` **fuera de la VM** y verificar
-   que el repositorio no tenga cambios locales (`git status --short`).
-3. En la carpeta del repositorio:
+2. Antes de actualizar en Ubuntu: respaldar MySQL `presupuesto` fuera de la
+   VM y comprobar que `git status --short` este limpio.
+3. Dentro de `/home/serviciudad/Escritorio/presupuesto`:
 
    ```bash
    git pull --ff-only origin codex/fase-3-frontend
    ./mvnw clean verify
-   cd frontend && npm ci && npm run build
-   ```
-
-4. Verificar que `www-data` puede leer el nuevo `frontend/dist`, reiniciar
-   `presupuesto` y comprobar el sitio y el login:
-
-   ```bash
+   cd frontend
+   npm ci
+   npm run build
    sudo systemctl restart presupuesto
-   sudo systemctl status presupuesto
-   sudo apache2ctl configtest
    ```
 
-   `git pull` no cambia los presupuestos guardados en MySQL. Flyway aplica las
-   migraciones nuevas al arrancar el backend. No ejecutar el perfil `local` en
-   el servidor: ese perfil usa H2, no la base de produccion.
+   Git cambia codigo, no borra los presupuestos en MySQL. Flyway aplica nuevas
+   migraciones al arrancar. No ejecutar el perfil `local` en el servidor: usa H2.
 
-## Respaldo y traslado a otro servidor
+## Respaldo y traslado futuro
 
-Respaldar la base MySQL con la herramienta elegida por el administrador (por
-ejemplo `mysqldump`), guardar la copia en otro equipo y probar una restauracion
-en una base aislada. Para pasar a un VPS se restaura esa copia en MySQL y se
-configura el mismo codigo con nuevas variables de conexion. GitHub contiene
-codigo, no presupuestos ni claves.
+Mantener una copia automatica y comprobada de la base MySQL en otro equipo.
+Para pasar a un VPS, restaurar esa copia en MySQL del VPS y desplegar el mismo
+codigo con nuevas variables de conexion. GitHub contiene codigo, no datos ni
+secretos.
