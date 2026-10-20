@@ -15,17 +15,17 @@ HTTPS en el puerto propio de Presupuesto, sin modificar Seleccion.
 
 - Usuario `serviciudad`, IP `192.168.100.251`, Escritorio existente.
 - MySQL activo; Apache y Seleccion activos en 80/443; no se modificaran.
-- SSH inactivo; se necesita para administrar esta VM desde otro PC.
-- Java ausente; se requiere JDK 21.
-- Node 18.19.1; Vite necesita Node 20.19+ o 22.12+. Instalar un Node mas
-  reciente solo para `serviciudad`, sin reemplazar el Node global.
+- SSH habilitado para administrar esta VM desde otro PC.
+- JDK 21 Temurin instalado dentro de `.local/jdk/runtime`.
+- Node 24 instalado dentro de `.local/node/runtime` para compilar el frontend,
+  sin reemplazar el Node global.
 
 ## Instalacion inicial
 
 1. Habilitar SSH y acceso por clave publica. Confirmar que se puede entrar como
    `serviciudad@192.168.100.251` antes de seguir.
 2. Comprobar que 8081 este libre, espacio en disco y acceso a Internet para
-   Maven y npm. Instalar JDK 21 y Node compatible para el usuario `serviciudad`.
+   Maven y npm. Instalar JDK 21 y Node compatible dentro de `.local`.
 3. Clonar el codigo en la carpeta elegida:
 
    ```bash
@@ -45,15 +45,15 @@ HTTPS en el puerto propio de Presupuesto, sin modificar Seleccion.
    primer arranque. La base H2 del PC Windows no se traslada automaticamente.
 5. Copiar `deploy/presupuesto.env.example` como `.env.production` dentro del
    proyecto. Completar valores y ejecutar `chmod 600 .env.production`. Git
-   ignora este archivo. `ADMIN_PASSWORD` necesita 12 caracteres o mas y solo
+   ignora este archivo. `ADMIN_PASSWORD` necesita 11 caracteres o mas y solo
    crea el usuario inicial cuando la base esta vacia.
 6. Compilar backend y frontend desde la carpeta del proyecto:
 
    ```bash
-   ./mvnw clean verify
+   JAVA_HOME="$PWD/.local/jdk/runtime" sh ./mvnw clean verify
    cd frontend
-   npm ci
-   npm run build
+   PATH="/home/serviciudad/Escritorio/presupuesto/.local/node/runtime/bin:$PATH" npm ci
+   PATH="/home/serviciudad/Escritorio/presupuesto/.local/node/runtime/bin:$PATH" npm run build
    ```
 
    `frontend/dist` queda dentro de `presupuesto`. El backend lo sirve usando
@@ -81,10 +81,10 @@ HTTPS en el puerto propio de Presupuesto, sin modificar Seleccion.
 
    ```bash
    git pull --ff-only origin codex/fase-3-frontend
-   ./mvnw clean verify
+   JAVA_HOME="$PWD/.local/jdk/runtime" sh ./mvnw clean verify
    cd frontend
-   npm ci
-   npm run build
+   PATH="/home/serviciudad/Escritorio/presupuesto/.local/node/runtime/bin:$PATH" npm ci
+   PATH="/home/serviciudad/Escritorio/presupuesto/.local/node/runtime/bin:$PATH" npm run build
    sudo systemctl restart presupuesto
    ```
 

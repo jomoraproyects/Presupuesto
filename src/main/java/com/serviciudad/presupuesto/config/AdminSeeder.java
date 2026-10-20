@@ -20,7 +20,7 @@ public class AdminSeeder {
         return args -> {
             if (username.isBlank() && password.isBlank()) return;
             if (username.isBlank() || password.isBlank()) throw new IllegalStateException("ADMIN_USERNAME y ADMIN_PASSWORD deben configurarse juntos");
-            if (password.length() < (syncPasswordOnStart ? 11 : 12)) throw new IllegalStateException("ADMIN_PASSWORD es demasiado corta");
+            if (password.length() < 11) throw new IllegalStateException("ADMIN_PASSWORD es demasiado corta");
             var existing = usuarios.findByUsername(username);
             if (existing.isPresent()) {
                 if (syncPasswordOnStart && !encoder.matches(password, existing.get().getPasswordHash())) {
