@@ -1,0 +1,27 @@
+# Sitio independiente del VirtualHost de seleccion. Ajustar dominio y TLS
+# despues de inspeccionar `apache2ctl -S` y los certificados existentes.
+<VirtualHost *:443>
+    ServerName presupuesto.interno.empresa.com
+    DocumentRoot /home/serviciudad/Escritorio/presupuesto/frontend/dist
+
+    SSLEngine on
+    SSLCertificateFile /RUTA/AL/CERTIFICADO.crt
+    SSLCertificateKeyFile /RUTA/A/LA/CLAVE.key
+
+    <Directory /home/serviciudad/Escritorio/presupuesto/frontend/dist>
+        Options -Indexes
+        AllowOverride None
+        Require all granted
+    </Directory>
+
+    ProxyRequests Off
+    ProxyPreserveHost On
+    ProxyPass /api/ http://127.0.0.1:8081/api/
+    ProxyPassReverse /api/ http://127.0.0.1:8081/api/
+
+    RewriteEngine On
+    RewriteCond %{REQUEST_URI} !^/api/
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ /index.html [L]
+</VirtualHost>

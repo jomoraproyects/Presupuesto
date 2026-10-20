@@ -1,28 +1,31 @@
 # Presupuesto en la VM Ubuntu de Serviciudad
 
 Este aplicativo se instala de manera independiente de `seleccion`: otro repositorio,
-otro servicio systemd, otra base MySQL y otro sitio de Nginx. El codigo puede estar
-en el Escritorio del usuario de Ubuntu. Nginx recibe solo la copia compilada de React.
+otro servicio systemd, otra base MySQL y otro sitio web. El codigo y el frontend
+compilado quedan en `/home/serviciudad/Escritorio/presupuesto`. El archivo de
+configuracion privada `.env.production` tambien queda ahi, excluido de Git.
+MySQL administra sus archivos de datos fuera de la carpeta del proyecto.
 
 ## Datos por confirmar antes de ejecutar
 
-- Usuario de Ubuntu y ruta real de su Escritorio (`Escritorio`, `Desktop` u otra).
-- IP/nombre de la VM, acceso SSH y rama de Git que se publicara.
+- Acceso SSH a `serviciudad@192.168.100.251` (ahora el servicio SSH esta inactivo).
 - Que los puertos 8081 y 443 esten disponibles y el nombre DNS interno elegido.
-- Ubicacion del certificado HTTPS y configuracion actual de Nginx.
+- Ubicacion del certificado HTTPS y configuracion Apache actual de `seleccion`.
 - Estado y version de MySQL y destino externo para respaldos.
 
-Los ejemplos usan `/home/USUARIO_UBUNTU/Escritorio/Presupuesto` y
-`presupuesto.interno.empresa.com`. Sustituirlos por los valores comprobados.
+La ruta y el usuario ya estan confirmados. El dominio de ejemplo
+`presupuesto.interno.empresa.com` aun debe sustituirse por el real.
 
 ## Instalacion inicial
 
-1. Comprobar Java 21, MySQL 8.x, Git, Nginx y Node compatible con Vite (20.19+
-   o 22.12+). No instalar ni cambiar servicios sin revisar los existentes.
+1. Instalar Java 21 y Node compatible con Vite (20.19+ o 22.12+). En la VM se
+   encontro MySQL activo, Java ausente, Node 18.19.1 y SSH inactivo. Apache
+   ocupa 80/443 y sirve `seleccion`; Nginx esta inactivo. Revisar primero los
+   sitios Apache existentes; no activar Nginx ni cambiar Node global.
 2. Clonar el repositorio como el usuario que ejecutara el servicio:
 
    ```bash
-   git clone --branch codex/fase-3-frontend https://github.com/jomoraproyects/Presupuesto.git /home/USUARIO_UBUNTU/Escritorio/Presupuesto
+   git clone --branch codex/fase-3-frontend https://github.com/jomoraproyects/Presupuesto.git /home/serviciudad/Escritorio/presupuesto
    ```
 
    La rama actual publicada es `codex/fase-3-frontend`; `main` aun tiene la
@@ -37,9 +40,9 @@ Los ejemplos usan `/home/USUARIO_UBUNTU/Escritorio/Presupuesto` y
 
    Flyway necesita permisos de estructura para las migraciones. En la primera
    ejecucion crea las tablas y carga los catalogos; no importa los datos H2 del PC.
-4. Crear `/etc/presupuesto`, copiar `deploy/presupuesto.env.example` a
-   `/etc/presupuesto/presupuesto.env`, completar sus secretos fuera de Git y
-   restringirlo con `sudo chmod 600`. `ADMIN_PASSWORD` requiere 12 o mas
+4. Copiar `deploy/presupuesto.env.example` a `.env.production` en la raiz del
+   proyecto, completar sus secretos y restringirlo con `chmod 600`. Este archivo
+   esta excluido de Git. `ADMIN_PASSWORD` requiere 12 o mas
    caracteres y solo crea `admin` si aun no existe. No guardar claves en el repo.
 5. Compilar desde el directorio del repositorio:
 
@@ -50,8 +53,8 @@ Los ejemplos usan `/home/USUARIO_UBUNTU/Escritorio/Presupuesto` y
 
    No definir `VITE_API_URL` con `localhost`: el frontend debe llamar a `/api`
    bajo el mismo dominio. `frontend/.env.example` ya usa esa ruta.
-6. Ajustar `deploy/presupuesto.service.example` a la ruta y usuario reales,
-   instalarlo como `/etc/systemd/system/presupuesto.service` y activar:
+6. Instalar `deploy/presupuesto.service.example` como
+   `/etc/systemd/system/presupuesto.service` y activar:
 
    ```bash
    sudo systemctl daemon-reload
@@ -61,13 +64,21 @@ Los ejemplos usan `/home/USUARIO_UBUNTU/Escritorio/Presupuesto` y
    ```
 
    El backend escucha solo en `127.0.0.1:8081`; no publicar ese puerto en la red.
-7. Crear `/var/www/presupuesto-web` para los archivos publicos y copiar alli el
-   contenido de `frontend/dist` (por ejemplo, `sudo cp -a frontend/dist/. /var/www/presupuesto-web/`
-   desde la raiz del repositorio). Ajustar el sitio de ejemplo de Nginx al DNS y
-   certificado existentes. La ruta `/api/` va al backend; el resto sirve React.
-   Antes de recargar, ejecutar `sudo nginx -t`. No modificar el sitio de `seleccion`.
+7. Ajustar el sitio de ejemplo de Apache al DNS y certificado existentes. La ruta
+   `/api/` va al backend; el resto sirve `frontend/dist` directamente desde la
+   carpeta del proyecto. Dar al usuario `www-data` permiso de atravesar las
+   carpetas superiores y leer `dist`, sin abrir el resto del hogar:
+
+   ```bash
+   sudo setfacl -m u:www-data:--x /home/serviciudad /home/serviciudad/Escritorio /home/serviciudad/Escritorio/presupuesto /home/serviciudad/Escritorio/presupuesto/frontend
+   sudo setfacl -R -m u:www-data:rX /home/serviciudad/Escritorio/presupuesto/frontend/dist
+   sudo setfacl -d -m u:www-data:rX /home/serviciudad/Escritorio/presupuesto/frontend/dist
+   ```
+
+   Si `setfacl` no existe, instalar el paquete `acl`. Antes de recargar Apache,
+   ejecutar `sudo apache2ctl configtest`. No modificar el sitio de `seleccion`.
 8. Entrar por HTTPS, crear los usuarios de cada area desde SUPER_ADMIN y probar
-   el flujo de presupuesto. Revisar `systemctl status presupuesto mysql nginx`.
+   el flujo de presupuesto. Revisar `systemctl status presupuesto mysql apache2`.
 
 ## Actualizaciones desde GitHub
 
@@ -82,13 +93,13 @@ Los ejemplos usan `/home/USUARIO_UBUNTU/Escritorio/Presupuesto` y
    cd frontend && npm ci && npm run build
    ```
 
-4. Copiar la nueva carpeta `frontend/dist` al directorio exclusivo
-   `/var/www/presupuesto-web`, reiniciar `presupuesto` y comprobar Nginx y login:
+4. Verificar que `www-data` puede leer el nuevo `frontend/dist`, reiniciar
+   `presupuesto` y comprobar el sitio y el login:
 
    ```bash
    sudo systemctl restart presupuesto
    sudo systemctl status presupuesto
-   sudo nginx -t
+   sudo apache2ctl configtest
    ```
 
    `git pull` no cambia los presupuestos guardados en MySQL. Flyway aplica las
