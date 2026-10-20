@@ -1,7 +1,7 @@
-# Sitio independiente del VirtualHost de seleccion. Ajustar dominio y TLS
-# despues de inspeccionar `apache2ctl -S` y los certificados existentes.
-<VirtualHost *:443>
-    ServerName presupuesto.interno.empresa.com
+# Sitio separado de seleccion en el puerto 8443. Agregar `Listen 8443` una
+# sola vez en ports.conf y reutilizar el certificado correcto para la IP.
+<VirtualHost *:8443>
+    ServerName 192.168.100.251
     DocumentRoot /home/serviciudad/Escritorio/presupuesto/frontend/dist
 
     SSLEngine on
@@ -12,6 +12,7 @@
         Options -Indexes
         AllowOverride None
         Require all granted
+        FallbackResource /index.html
     </Directory>
 
     ProxyRequests Off
@@ -19,9 +20,4 @@
     ProxyPass /api/ http://127.0.0.1:8081/api/
     ProxyPassReverse /api/ http://127.0.0.1:8081/api/
 
-    RewriteEngine On
-    RewriteCond %{REQUEST_URI} !^/api/
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^ /index.html [L]
 </VirtualHost>

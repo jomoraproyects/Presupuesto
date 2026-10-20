@@ -9,12 +9,13 @@ MySQL administra sus archivos de datos fuera de la carpeta del proyecto.
 ## Datos por confirmar antes de ejecutar
 
 - Acceso SSH a `serviciudad@192.168.100.251` (ahora el servicio SSH esta inactivo).
-- Que los puertos 8081 y 443 esten disponibles y el nombre DNS interno elegido.
-- Ubicacion del certificado HTTPS y configuracion Apache actual de `seleccion`.
+- Que los puertos 8081 y 8443 esten disponibles.
+- Ubicacion y validez del certificado HTTPS de `seleccion` para 192.168.100.251.
 - Estado y version de MySQL y destino externo para respaldos.
 
-La ruta y el usuario ya estan confirmados. El dominio de ejemplo
-`presupuesto.interno.empresa.com` aun debe sustituirse por el real.
+La ruta y el usuario ya estan confirmados. `seleccion` usa la IP
+192.168.100.251 en los puertos 80 y 443. Presupuesto usara el puerto 8443
+de Apache, con una URL independiente, si el certificado cubre esa IP.
 
 ## Instalacion inicial
 
@@ -64,7 +65,9 @@ La ruta y el usuario ya estan confirmados. El dominio de ejemplo
    ```
 
    El backend escucha solo en `127.0.0.1:8081`; no publicar ese puerto en la red.
-7. Ajustar el sitio de ejemplo de Apache al DNS y certificado existentes. La ruta
+7. Ajustar el sitio de ejemplo de Apache al certificado existente. Agregar
+   `Listen 8443` una sola vez a la configuracion de puertos de Apache y permitir
+   el puerto 8443 solo desde la red interna. La ruta
    `/api/` va al backend; el resto sirve `frontend/dist` directamente desde la
    carpeta del proyecto. Dar al usuario `www-data` permiso de atravesar las
    carpetas superiores y leer `dist`, sin abrir el resto del hogar:
